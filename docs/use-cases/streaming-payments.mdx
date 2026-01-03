@@ -1,0 +1,473 @@
+---
+title: Streaming Payments
+description: Pay continuously by the second for compute, bandwidth, or content using Radius.
+---
+
+import { Callout } from '@/components/Callout';
+import { CodeBlock } from '@/components/CodeBlock';
+
+# Streaming Payments
+
+Enable continuous, per-second billing for services like compute, bandwidth, and content delivery. With Radius, users pay in real-time as they consume, eliminating overpayment risk and credit uncertainty.
+
+## Problem Statement
+
+Traditional billing models create friction for both service providers and consumers:
+
+- **Upfront payment risk**: Users pre-pay without knowing exact consumption, risking overpayment and fund lockup
+- **Invoice-based delays**: Providers wait days or weeks to get paid, exposing themselves to default risk
+- **Coarse billing granularity**: Services charge by month or hour, forcing users to pay for unused capacity
+
+Radius solves this with **continuous micropayments**—pay-as-you-consume settlement at second-level granularity, eliminating both payment and credit risk entirely.
+
+## How It Works
+
+Streaming payments establish an ongoing payment loop between client and server:
+
+1. **Client initiates a session** with the server, providing a signer with available funds
+2. **Payments flow at regular intervals** (every second, every minute) based on service consumption
+3. **Service continues uninterrupted** as long as payments arrive on schedule
+4. **Either party can terminate** anytime—the client stops payments, or the server stops service
+
+This creates a natural "circuit breaker": if the client runs out of funds or the server detects payment failure, service halts immediately.
+
+## Implementation Example
+
+Here's a complete streaming payment system using the Radius SDK:
+
+### Client: Payment Stream Loop
+
+```typescript
+import {
+  createRadiusClient,
+  createPrivateKeySigner,
+  radiusTestnet,
+  type Address,
+} from '@radiustechsystems/sdk';
+import { parseEther } from 'viem';
+
+/**
+ * Streaming Payment Client
+ * Sends micropayments at regular intervals to keep a service session alive
+ */
+
+const client = createRadiusClient({ chain: radiusTestnet });
+const signer = createPrivateKeySigner(
+  process.env.RADIUS_PRIVATE_KEY as `0x${string}`,
+  radiusTestnet.id
+);
+
+const SERVICE_ADDRESS: Address = '0x742d35Cc6634C0532925a3b844Bc9e7595f7E9F1';
+const PAYMENT_INTERVAL_MS = 1000;           // Pay every 1 second
+const PAYMENT_AMOUNT = parseEther('0.001'); // 0.001 SBC per second
+
+let isStreamActive = true;
+let totalPaid = 0n;
+
+async function startPaymentStream() {
+  console.log('Starting payment stream to:', SERVICE_ADDRESS);
+
+  // Check initial balance
+  const balance = await client.getBalance(signer.address);
+  console.log('Starting balance:', balance.toString(), 'wei');
+
+  // Payment loop
+  const intervalId = setInterval(async () => {
+    if (!isStreamActive) {
+      clearInterval(intervalId);
+      console.log('Payment stream stopped. Total paid:', totalPaid.toString());
+      return;
+    }
+
+    try {
+      // Send payment
+      const receipt = await client.sendAndWait(
+        signer,
+        SERVICE_ADDRESS,
+        PAYMENT_AMOUNT
+      );
+
+      if (receipt.status === 'success') {
+        totalPaid += PAYMENT_AMOUNT;
+        console.log(
+          `Payment sent: ${PAYMENT_AMOUNT.toString()} wei (Total: ${totalPaid.toString()})`
+        );
+      } else {
+        console.error('Payment failed:', receipt.transactionHash);
+        isStreamActive = false;
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      isStreamActive = false;
+    }
+  }, PAYMENT_INTERVAL_MS);
+
+  return intervalId;
+}
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\nShutting down payment stream...');
+  isStreamActive = false;
+  process.exit(0);
+});
+
+// Start the stream
+startPaymentStream();
+```
+
+### Server: Session Manager
+
+```typescript
+import {
+  createRadiusClient,
+  type Address,
+} from '@radiustechsystems/sdk';
+
+/**
+ * Streaming Payment Server
+ * Tracks active sessions and verifies incoming payments
+ */
+
+interface PaymentSession {
+  clientAddress: Address;
+  startTime: number;
+  lastPaymentTime: number;
+  amountReceived: bigint;
+  isActive: boolean;
+}
+
+const client = createRadiusClient({ chain: radiusTestnet });
+const PAYMENT_TIMEOUT_MS = 5000; // Terminate session if no payment for 5 seconds
+const sessions = new Map<Address, PaymentSession>();
+
+/**
+ * Monitor incoming payments and maintain session state
+ * In production, this would integrate with blockchain event monitoring
+ */
+async function monitorPayments() {
+  setInterval(() => {
+    const now = Date.now();
+
+    sessions.forEach((session, clientAddress) => {
+      const timeSinceLastPayment = now - session.lastPaymentTime;
+
+      if (timeSinceLastPayment > PAYMENT_TIMEOUT_MS && session.isActive) {
+        console.log(`Terminating session: Payment timeout for ${clientAddress}`);
+        session.isActive = false;
+
+        // Clean up resources
+        terminateSession(clientAddress);
+      }
+    });
+  }, 1000); // Check every second
+}
+
+/**
+ * Handle an incoming payment from a client
+ * Called by payment verification logic
+ */
+function handleIncomingPayment(
+  clientAddress: Address,
+  amount: bigint,
+  timestamp: number
+) {
+  let session = sessions.get(clientAddress);
+
+  if (!session) {
+    // New session
+    session = {
+      clientAddress,
+      startTime: timestamp,
+      lastPaymentTime: timestamp,
+      amountReceived: amount,
+      isActive: true,
+    };
+    sessions.set(clientAddress, session);
+    console.log(`New session created: ${clientAddress}`);
+  } else {
+    // Existing session
+    session.lastPaymentTime = timestamp;
+    session.amountReceived += amount;
+    console.log(
+      `Payment received from ${clientAddress}: ${amount.toString()} wei (Total: ${session.amountReceived.toString()})`
+    );
+  }
+
+  return session;
+}
+
+/**
+ * Terminate a session and clean up resources
+ */
+function terminateSession(clientAddress: Address) {
+  const session = sessions.get(clientAddress);
+  if (session) {
+    const duration = Date.now() - session.startTime;
+    console.log(`Session ended: ${clientAddress}`);
+    console.log(`  Duration: ${duration}ms`);
+    console.log(`  Total received: ${session.amountReceived.toString()} wei`);
+    sessions.delete(clientAddress);
+  }
+}
+
+/**
+ * Get active sessions (for monitoring/admin)
+ */
+function getActiveSessions() {
+  return Array.from(sessions.values()).filter((s) => s.isActive);
+}
+
+// Start monitoring
+monitorPayments();
+
+export {
+  handleIncomingPayment,
+  terminateSession,
+  getActiveSessions,
+  type PaymentSession,
+};
+```
+
+## Code Examples
+
+### Basic Streaming Payment Setup
+
+```typescript
+import {
+  createRadiusClient,
+  createPrivateKeySigner,
+  radiusTestnet,
+  type Address,
+} from '@radiustechsystems/sdk';
+import { parseEther } from 'viem';
+
+// Initialize client and signer
+const client = createRadiusClient({ chain: radiusTestnet });
+const signer = createPrivateKeySigner(
+  process.env.RADIUS_PRIVATE_KEY as `0x${string}`,
+  radiusTestnet.id
+);
+
+// Configure streaming
+const serviceAddress: Address = '0x742d35Cc6634C0532925a3b844Bc9e7595f7E9F1';
+const paymentPerSecond = parseEther('0.0001');
+
+// Stream payments every second
+const streamInterval = setInterval(async () => {
+  const receipt = await client.sendAndWait(
+    signer,
+    serviceAddress,
+    paymentPerSecond
+  );
+  console.log('Payment:', receipt.transactionHash, receipt.status);
+}, 1000);
+
+// Stop stream when needed
+setTimeout(() => clearInterval(streamInterval), 60000); // Stop after 60 seconds
+```
+
+### Graceful Termination on Payment Failure
+
+```typescript
+async function streamWithFallback(
+  serviceAddress: Address,
+  paymentAmount: bigint,
+  maxRetries: number = 3
+) {
+  let retries = 0;
+
+  const intervalId = setInterval(async () => {
+    try {
+      await client.sendAndWait(signer, serviceAddress, paymentAmount);
+      retries = 0; // Reset on success
+      console.log('Payment successful');
+    } catch (error) {
+      retries++;
+      console.warn(`Payment failed (attempt ${retries}/${maxRetries}):`, error);
+
+      if (retries >= maxRetries) {
+        clearInterval(intervalId);
+        console.error('Max retries exceeded. Terminating session.');
+        process.exit(1);
+      }
+    }
+  }, 1000);
+
+  return intervalId;
+}
+```
+
+### Session Duration Tracking
+
+```typescript
+interface StreamingSession {
+  serviceAddress: Address;
+  startTime: Date;
+  totalSpent: bigint;
+  isActive: boolean;
+}
+
+async function createStreamingSession(
+  serviceAddress: Address,
+  budgetPerSecond: bigint
+): Promise<StreamingSession> {
+  const session: StreamingSession = {
+    serviceAddress,
+    startTime: new Date(),
+    totalSpent: 0n,
+    isActive: true,
+  };
+
+  const intervalId = setInterval(async () => {
+    if (!session.isActive) {
+      clearInterval(intervalId);
+      const duration = new Date().getTime() - session.startTime.getTime();
+      console.log(
+        `Session ended after ${duration}ms. Total spent: ${session.totalSpent.toString()}`
+      );
+      return;
+    }
+
+    try {
+      await client.sendAndWait(signer, serviceAddress, budgetPerSecond);
+      session.totalSpent += budgetPerSecond;
+    } catch (error) {
+      session.isActive = false;
+      console.error('Session terminated due to payment error:', error);
+    }
+  }, 1000);
+
+  return session;
+}
+
+// Close session at any time
+const session = await createStreamingSession(
+  '0x742d35Cc6634C0532925a3b844Bc9e7595f7E9F1',
+  parseEther('0.0001')
+);
+
+// Stop after 30 seconds
+setTimeout(() => {
+  session.isActive = false;
+}, 30000);
+```
+
+## Benefits
+
+Streaming payments unlock several key advantages:
+
+| Benefit | Impact |
+|---------|--------|
+| **No overpayment** | Pay only for what you consume, down to the second |
+| **No credit risk** | Real-time settlement eliminates provider default risk |
+| **Granular billing** | Per-second pricing enables precise cost-matching |
+| **Instant termination** | Service stops immediately on payment failure |
+| **Predictable costs** | Linear per-unit pricing with no hidden fees |
+| **Improved UX** | Users pay gradually instead of upfront |
+
+## Use Cases
+
+Streaming payments are ideal for:
+
+### Cloud Compute
+**Pay-per-second VMs and container instances**
+- Traditional: Monthly subscriptions for over-provisioned capacity
+- Streaming: Micro-VM charges by the second, scale up/down instantly
+- Example: $0.0001 per second per vCPU
+
+### Video/Content Streaming
+**Pay-per-minute or per-gigabyte**
+- Traditional: Tiered monthly plans with bandwidth caps
+- Streaming: Continuous payment as bytes flow, no caps or surprises
+- Example: $0.00001 per MB of video data
+
+### WiFi & Network Access
+**Pay-per-minute connectivity**
+- Traditional: 24-hour passes or monthly contracts
+- Streaming: Micropayments per minute of active connection
+- Example: $0.0001 per minute of active connection
+
+### AI Inference & APIs
+**Pay-per-token or per-request**
+- Traditional: Throttled APIs with prepaid tokens
+- Streaming: Continuous settlement as tokens are generated
+- Example: $0.00001 per 1,000 tokens generated
+
+## Best Practices
+
+### 1. Balance Checks
+Always verify sufficient balance before starting a stream:
+
+```typescript
+const balance = await client.getBalance(signer.address);
+const requiredBalance = paymentPerSecond * BigInt(durationSeconds);
+
+if (balance < requiredBalance) {
+  throw new Error('Insufficient balance for requested stream duration');
+}
+```
+
+### 2. Payment Intervals
+Choose intervals based on service needs:
+- **1 second**: Fine-grained billing, higher gas costs
+- **5-10 seconds**: Balanced approach for most services
+- **30-60 seconds**: Lower cost, coarser billing
+
+### 3. Error Handling
+Implement robust fallback logic:
+
+```typescript
+const maxRetries = 3;
+let failureCount = 0;
+
+try {
+  await client.sendAndWait(signer, serviceAddress, amount);
+  failureCount = 0; // Reset on success
+} catch (error) {
+  failureCount++;
+  if (failureCount >= maxRetries) {
+    // Terminate session
+  }
+}
+```
+
+### 4. Session Monitoring
+Track session health and detect hung payments:
+
+```typescript
+let lastPaymentTime = Date.now();
+const TIMEOUT_MS = 10000;
+
+setInterval(() => {
+  if (Date.now() - lastPaymentTime > TIMEOUT_MS) {
+    console.error('Payment timeout detected');
+    stopStream();
+  }
+}, 1000);
+```
+
+## Network Configuration
+
+**Radius Testnet:**
+- RPC Endpoint: `https://rpc.testnet.radiustech.xyz`
+- Chain ID: `1223953`
+- Native Token: SBC
+- Block time: ~2-3 seconds
+
+<Callout type="info">
+Testnet is perfect for experimenting with streaming payment patterns. Get free SBC tokens from the [Radius Testnet Faucet](https://testnet.radiustech.xyz/testnet/faucet).
+</Callout>
+
+## What's Next?
+
+Learn more about building on Radius:
+
+- **[Quick Start - First Payment](/build-deploy/quick-start-first-payment)** — Send your first transaction
+- **[SDKs (TypeScript)](/developer-resources/sdks-typescript)** — Complete SDK reference
+- **[Account Setup](/build-deploy/account-setup)** — Secure key management
+- **[Wallet Integration](/build-deploy/wallet-integration)** — Connect MetaMask and other wallets
+
+---
+
+**Ready to build?** Start with the [SDK TypeScript guide](/developer-resources/sdks-typescript) and implement your first streaming payment service on Radius Testnet.

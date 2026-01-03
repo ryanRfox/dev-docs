@@ -1,0 +1,476 @@
+---
+title: SDKs (TypeScript)
+description: Install and use the Radius TypeScript SDK for building on Radius
+---
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+The Radius TypeScript SDK provides a complete toolkit for interacting with the Radius network, built on [viem](https://viem.sh) for maximum compatibility with the Ethereum ecosystem.
+
+## Installation
+
+Get started by installing the SDK.
+
+<Tabs defaultValue="pnpm" className="w-full">
+  <TabsList>
+    <TabsTrigger value="pnpm">pnpm</TabsTrigger>
+    <TabsTrigger value="npm">npm</TabsTrigger>
+    <TabsTrigger value="yarn">yarn</TabsTrigger>
+  </TabsList>
+  <TabsContent value="pnpm">
+```bash
+pnpm add @radiustechsystems/sdk
+```
+  </TabsContent>
+  <TabsContent value="npm">
+```bash
+npm install @radiustechsystems/sdk
+```
+  </TabsContent>
+  <TabsContent value="yarn">
+```bash
+yarn add @radiustechsystems/sdk
+```
+  </TabsContent>
+</Tabs>
+
+**Requirements:**
+- Node.js >= 18
+- TypeScript 5+ (recommended)
+
+The SDK has no ethers.js or web3.js dependencies—it's built entirely on viem.
+
+## Quick Start
+
+Connect to Radius and send your first transaction.
+
+```typescript
+import {
+  createRadiusClient,
+  createPrivateKeySigner,
+  radiusTestnet,
+  type Address,
+} from '@radiustechsystems/sdk';
+
+// Connect to Radius testnet
+const client = createRadiusClient({ chain: radiusTestnet });
+
+// Create a signer from private key
+const signer = createPrivateKeySigner(
+  process.env.RADIUS_PRIVATE_KEY as `0x${string}`,
+  radiusTestnet.id
+);
+
+// Check balance
+const balance = await client.getBalance(signer.address);
+console.log('Balance:', balance);
+
+// Send a transaction
+const recipient: Address = '0x742d35Cc6634C0532925a3b844Bc9e7595f7E9F1';
+const receipt = await client.sendAndWait(signer, recipient, 1000000000000000000n);
+console.log('Status:', receipt.status); // 'success' or 'reverted'
+```
+
+## Core Concepts
+
+The SDK exports these primary constructs:
+
+| Export | Purpose |
+|--------|---------|
+| **createRadiusClient** | Factory function to create a client |
+| **createPrivateKeySigner** | Create a signer from a private key |
+| **radiusTestnet** | Chain definition for Radius Testnet |
+| **Address** | Type alias for addresses (`0x${string}`) |
+| **RadiusReceipt** | Transaction receipt type |
+| **RadiusError** | Base error class with rich context |
+
+### RadiusClient
+
+The client is your entry point for all network interactions.
+
+```typescript
+import { createRadiusClient, radiusTestnet } from '@radiustechsystems/sdk';
+
+const client = createRadiusClient({ chain: radiusTestnet });
+```
+
+**Environment Variable Support:** The client automatically reads `RADIUS_RPC_URL` or `RADIUS_ENDPOINT` environment variables as fallback endpoints.
+
+### Client Methods
+
+#### Read Operations
+
+```typescript
+// Get chain ID
+const chainId = await client.getChainId(); // 1223953n
+
+// Get balance
+const balance = await client.getBalance(address); // bigint in wei
+
+// Get contract code
+const code = await client.getCode(address); // Hex string
+
+// Get account nonce
+const nonce = await client.getNonce(address); // number
+
+// Estimate gas
+const gas = await client.estimateGas({ to, value, data });
+```
+
+#### Transaction Operations
+
+```typescript
+// Send native tokens (fire-and-forget)
+const hash = await client.send(signer, to, value);
+
+// Send native tokens and wait for receipt
+const receipt = await client.sendAndWait(signer, to, value);
+
+// Wait for an existing transaction
+const receipt = await client.waitForReceipt(hash);
+
+// Send raw signed transaction
+const hash = await client.sendRawTransaction(signedTx);
+```
+
+#### Contract Operations
+
+```typescript
+// Call a contract method (read-only)
+const result = await client.call<ReturnType>(contract, 'methodName', arg1, arg2);
+
+// Execute a contract method (state-changing, fire-and-forget)
+const hash = await client.execute(contract, signer, 'methodName', arg1, arg2);
+
+// Execute and wait for receipt
+const receipt = await client.executeAndWait(contract, signer, 'methodName', arg1, arg2);
+
+// Deploy a contract
+const { address, receipt } = await client.deployContract(signer, bytecode, abi, ...constructorArgs);
+```
+
+### Address Type
+
+`Address` is a type alias (not a class), compatible with viem's address type.
+
+```typescript
+import {
+  type Address,
+  addressToBytes,
+  isAddressEqual,
+  toChecksumAddress,
+  ZERO_ADDRESS,
+} from '@radiustechsystems/sdk';
+
+// Address is just a typed string
+const addr: Address = '0x742d35Cc6634C0532925a3b844Bc9e7595f7E9F1';
+
+// Utility functions (not methods)
+const bytes = addressToBytes(addr);           // Uint8Array
+const equal = isAddressEqual(addr, other);    // boolean
+const checksummed = toChecksumAddress(addr);  // Address
+
+// Zero address constant
+console.log(ZERO_ADDRESS); // '0x0000000000000000000000000000000000000000'
+```
+
+### RadiusReceipt
+
+Transaction receipts contain detailed information about executed transactions.
+
+```typescript
+interface RadiusReceipt {
+  transactionHash: Hash;
+  from: Address;
+  to: Address | null;
+  contractAddress: Address | null;  // Set when deploying contracts
+  gasUsed: bigint;
+  status: 'success' | 'reverted';   // String, not number
+  blockNumber: bigint;
+  blockHash: Hash;
+  logs: Log[];
+}
+```
+
+## Working with Signers
+
+Signers authorize transactions on behalf of an account.
+
+### Create from Private Key
+
+```typescript
+import { createPrivateKeySigner, radiusTestnet } from '@radiustechsystems/sdk';
+
+const signer = createPrivateKeySigner(
+  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+  radiusTestnet.id
+);
+
+console.log('Address:', signer.address);
+```
+
+### Signer Interface
+
+```typescript
+interface RadiusSigner {
+  address: Address;
+  chainId: number;
+  signTransaction(tx: TransactionRequest): Promise<Hex>;
+  signMessage(message: string | Uint8Array): Promise<Hex>;
+}
+```
+
+## Contract Interactions
+
+### Create a Contract Instance
+
+```typescript
+import { createContractInstance, type Address } from '@radiustechsystems/sdk';
+
+const contract = createContractInstance({
+  address: '0xF966020a30946A64B39E2e243049036367590858' as Address,
+  abi: ERC20_ABI,
+});
+```
+
+### Call (Read-Only)
+
+```typescript
+// Type-safe call with generics
+const balance = await client.call<bigint>(
+  contract,
+  'balanceOf',
+  signer.address
+);
+
+console.log('Token balance:', balance);
+```
+
+### Execute (State-Changing)
+
+```typescript
+// Execute and wait for confirmation
+const receipt = await client.executeAndWait(
+  contract,
+  signer,
+  'transfer',
+  recipientAddress,
+  1000000000000000000n
+);
+
+if (receipt.status === 'success') {
+  console.log('Transfer successful!');
+}
+```
+
+### Deploy a Contract
+
+```typescript
+const bytecode = '0x608060...'; // Contract bytecode
+const abi = [...]; // Contract ABI
+
+const { address, receipt } = await client.deployContract(
+  signer,
+  bytecode,
+  abi,
+  // Constructor arguments (if any)
+  'Constructor Arg 1',
+  42n
+);
+
+console.log('Deployed at:', address);
+```
+
+## Error Handling
+
+The SDK provides a rich error hierarchy for detailed error handling.
+
+### Error Classes
+
+```typescript
+import {
+  RadiusError,
+  TransactionFailedError,
+  TransactionRevertedError,
+  InsufficientBalanceError,
+  SignerNotFoundError,
+  GasEstimationError,
+  ContractCallError,
+  ContractDeploymentError,
+  MissingAbiError,
+} from '@radiustechsystems/sdk';
+```
+
+### Error Properties
+
+All errors extend `RadiusError` with these properties:
+
+```typescript
+class RadiusError extends Error {
+  readonly shortMessage: string;  // Brief description
+  readonly details?: string;      // Extended details
+  readonly docsPath?: string;     // Link to relevant docs
+  readonly cause?: Error;         // Original error
+  readonly meta?: Record<string, unknown>;
+
+  // Walk the error chain
+  walk(fn?: (err: unknown) => boolean): Error | unknown | null;
+}
+```
+
+### Type-Safe Error Handling
+
+```typescript
+import type { SendTransactionErrorType } from '@radiustechsystems/sdk';
+
+try {
+  const receipt = await client.sendAndWait(signer, to, amount);
+  console.log('Success:', receipt.transactionHash);
+} catch (error) {
+  if (error instanceof InsufficientBalanceError) {
+    console.error(`Need: ${error.required}, Have: ${error.balance}`);
+  } else if (error instanceof TransactionRevertedError) {
+    console.error(`Reverted: ${error.revertReason}`);
+  } else if (error instanceof RadiusError) {
+    console.error(`Error: ${error.shortMessage}`);
+    console.error(`Details: ${error.details}`);
+
+    // Walk the error chain to find root cause
+    const rootCause = error.walk();
+    if (rootCause) {
+      console.error('Root cause:', rootCause);
+    }
+  }
+}
+```
+
+### Per-Action Error Types
+
+```typescript
+import type {
+  SendTransactionErrorType,
+  CallContractErrorType,
+  ExecuteContractErrorType,
+  DeployContractErrorType,
+  SigningErrorType,
+} from '@radiustechsystems/sdk';
+```
+
+## Client Extension
+
+Extend the client with custom actions.
+
+```typescript
+import { createRadiusClient, radiusTestnet } from '@radiustechsystems/sdk';
+import { formatEther } from 'viem';
+
+const client = createRadiusClient({ chain: radiusTestnet }).extend((base) => ({
+  // Add a custom method to format balance
+  async getBalanceFormatted(address: Address): Promise<string> {
+    const balance = await base.getBalance(address);
+    return formatEther(balance);
+  },
+
+  // Add a custom method to transfer all funds
+  async transferAll(signer: RadiusSigner, to: Address): Promise<RadiusReceipt> {
+    const balance = await base.getBalance(signer.address);
+    const gasReserve = 21000n * 1000000000n; // Reserve for gas
+    const value = balance - gasReserve;
+    return base.sendAndWait(signer, to, value);
+  },
+}));
+
+// Use custom methods
+const formatted = await client.getBalanceFormatted(address);
+const receipt = await client.transferAll(signer, recipient);
+```
+
+## Chain Configuration
+
+### Built-in Chain Definitions
+
+```typescript
+import { radiusTestnet, RADIUS_TESTNET_CONTRACTS } from '@radiustechsystems/sdk';
+
+// Chain definition includes contracts
+console.log(radiusTestnet.id);         // 1223953
+console.log(radiusTestnet.name);       // 'Radius Testnet'
+console.log(radiusTestnet.contracts?.sbc?.address);
+
+// Or use the constants directly
+console.log(RADIUS_TESTNET_CONTRACTS.sbc);
+// '0xF966020a30946A64B39E2e243049036367590858'
+```
+
+### Network Configuration
+
+| Setting | Value |
+|---------|-------|
+| **RPC Endpoint** | `https://rpc.testnet.radiustech.xyz` |
+| **Chain ID** | `1223953` |
+| **Native Token** | SBC |
+| **SBC Token Contract** | `0xF966020a30946A64B39E2e243049036367590858` |
+
+## ERC-20 Token Operations
+
+### Check Token Balance
+
+```typescript
+const token = createContractInstance({
+  address: RADIUS_TESTNET_CONTRACTS.sbc as Address,
+  abi: ERC20_ABI,
+});
+
+const balance = await client.call<bigint>(
+  token,
+  'balanceOf',
+  signer.address
+);
+
+console.log('Token balance:', balance);
+```
+
+### Transfer Tokens
+
+```typescript
+const recipient: Address = '0xabcd...';
+const amount = 1000000000000000000n; // 1 token (18 decimals)
+
+const receipt = await client.executeAndWait(
+  token,
+  signer,
+  'transfer',
+  recipient,
+  amount
+);
+
+if (receipt.status === 'success') {
+  console.log('Transfer complete:', receipt.transactionHash);
+}
+```
+
+## TypeScript Support
+
+The SDK is written in TypeScript with strict mode. All types are exported:
+
+```typescript
+import type {
+  Address,
+  Hash,
+  Hex,
+  RadiusClient,
+  RadiusSigner,
+  RadiusReceipt,
+  ContractInstance,
+  TransactionRequest,
+  SendTransactionErrorType,
+  CallContractErrorType,
+} from '@radiustechsystems/sdk';
+```
+
+## Next Steps
+
+- **[Quick Start](/build-deploy/quick-start-first-payment)** — Send your first transaction
+- **[Account Setup](/build-deploy/account-setup)** — Secure key management
+- **[Wallet Integration](/build-deploy/wallet-integration)** — Connect MetaMask and other wallets
+- **[JSON-RPC API](/developer-resources/json-rpc-api)** — Direct RPC access

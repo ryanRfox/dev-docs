@@ -1,0 +1,386 @@
+---
+title: Pay-per-Visit Content
+description: Monetize content with micropayments instead of subscriptions or ads.
+---
+
+import { Callout } from '@/components/Callout';
+import { CodeBlock } from '@/components/CodeBlock';
+
+# Pay-per-Visit Content
+
+Enable micropayment-based content access on Radius. Users pay small amounts (cents) per article, video, or piece of content instead of committing to monthly subscriptions or tolerating ad-based models. With instant settlement and low transaction costs, you can monetize every single piece of content users consume.
+
+## The Problem
+
+Traditional content monetization forces creators into painful trade-offs:
+
+- **Subscriptions** force users to pay for content they don't consume. Most readers abandon paywalls rather than commit to a monthly subscription for a single article.
+- **Ads** damage user experience, raise privacy concerns, and generate surprisingly little revenue per user—often requiring massive traffic to break even.
+- **Freemium models** leave money on the table from engaged users willing to pay for premium content.
+
+Radius solves this with **pay-per-visit micropayments**—users pay exactly for what they read, watch, or download. No subscriptions. No trackers. Instant access.
+
+## How It Works
+
+The user journey is frictionless:
+
+1. **User lands on premium content** and sees a paywall
+2. **Clicks "Unlock" and chooses a micropayment amount** ($0.05, $0.10, $0.25, etc.)
+3. **Confirms payment in their wallet** (MetaMask, Rainbow, etc.)
+4. **Content unlocks instantly** after payment confirmation—no waiting, no email verification
+5. **Payment settles instantly** to your account in stablecoins
+
+Behind the scenes, Radius handles the heavy lifting: gas fees are paid in stablecoins via Turnstile, transactions settle in seconds, and there's no intermediary taking a cut.
+
+<Callout type="info">
+Radius processes transactions with instant finality. Users see content appear immediately after they confirm payment—no "waiting for confirmation" screens.
+</Callout>
+
+## Implementation Example
+
+Here's a complete React component that implements a content paywall with Radius micropayments:
+
+### Step 1: Paywall Component
+
+```typescript
+import { useState } from 'react';
+import { parseEther } from 'viem';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+
+interface ContentPaywallProps {
+  contentId: string;
+  title: string;
+  amount: string; // e.g., "0.10" (SBC)
+  children: React.ReactNode;
+}
+
+export function ContentPaywall({
+  contentId,
+  title,
+  amount,
+  children,
+}: ContentPaywallProps) {
+  const { address, isConnected } = useAccount();
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
+  const { data: hash, writeContract, isPending } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  const handleUnlock = async () => {
+    if (!address) return;
+
+    setIsPaying(true);
+
+    try {
+      // Send payment to content owner address
+      const contentOwner = '0x742d35Cc6634C0532925a3b844Bc9e7595f7E9F1';
+
+      writeContract({
+        to: contentOwner,
+        account: address,
+        value: parseEther(amount),
+      });
+    } catch (error) {
+      console.error('Payment failed:', error);
+      setIsPaying(false);
+    }
+  };
+
+  // Once payment is confirmed, unlock content
+  if (isSuccess && !isUnlocked) {
+    setIsUnlocked(true);
+    setIsPaying(false);
+  }
+
+  if (!isConnected) {
+    return (
+      <div className="paywall">
+        <h2>{title}</h2>
+        <p>Connect your wallet to unlock this content.</p>
+        <button onClick={() => {}}>Connect Wallet</button>
+      </div>
+    );
+  }
+
+  if (isUnlocked) {
+    return <div className="content">{children}</div>;
+  }
+
+  return (
+    <div className="paywall">
+      <h2>{title}</h2>
+      <p>
+        This premium content costs <strong>${amount} SBC</strong> to unlock.
+      </p>
+      <p>
+        One-time payment. No subscription. Instant access.
+      </p>
+
+      <button
+        onClick={handleUnlock}
+        disabled={isPaying || isConfirming}
+        className="unlock-button"
+      >
+        {isPaying || isConfirming ? 'Processing...' : `Unlock for $${amount}`}
+      </button>
+
+      {isPending && <p className="status">Awaiting wallet confirmation...</p>}
+      {isConfirming && <p className="status">Confirming payment...</p>}
+      {hash && (
+        <p className="transaction-hash">
+          Transaction: {hash.slice(0, 10)}...{hash.slice(-8)}
+        </p>
+      )}
+    </div>
+  );
+}
+```
+
+### Step 2: Using the Paywall
+
+```typescript
+export default function ArticlePage() {
+  return (
+    <ContentPaywall
+      contentId="article-123"
+      title="The Future of Micropayments"
+      amount="0.10"
+    >
+      <article>
+        <p>
+          Micropayments enable creators to monetize directly. Instead of
+          relying on ads or subscriptions, users pay exactly what content is
+          worth to them...
+        </p>
+        {/* Rest of article content */}
+      </article>
+    </ContentPaywall>
+  );
+}
+```
+
+## Complete Code Examples
+
+### Server-Side Payment Verification
+
+Verify payments on your backend to prevent abuse:
+
+```typescript
+// pages/api/verify-payment.ts
+import { createPublicClient, http } from 'viem';
+import { radiusTestnet } from '@radiustechsystems/sdk';
+
+const publicClient = createPublicClient({
+  chain: radiusTestnet,
+  transport: http(),
+});
+
+export default async function handler(req, res) {
+  const { transactionHash, contentId, userAddress } = req.body;
+
+  try {
+    // Fetch transaction receipt
+    const receipt = await publicClient.getTransactionReceipt({
+      hash: transactionHash,
+    });
+
+    // Verify transaction success
+    if (receipt.status !== 'success') {
+      return res.status(400).json({ error: 'Payment failed' });
+    }
+
+    // Verify amount and recipient
+    const tx = await publicClient.getTransaction({ hash: transactionHash });
+    const expectedAmount = parseEther('0.10');
+
+    if (tx.value !== expectedAmount) {
+      return res.status(400).json({ error: 'Incorrect payment amount' });
+    }
+
+    // Record successful payment in your database
+    await db.payments.create({
+      contentId,
+      userAddress,
+      transactionHash,
+      amount: tx.value.toString(),
+      timestamp: new Date(),
+    });
+
+    return res.status(200).json({ verified: true, access: true });
+  } catch (error) {
+    console.error('Verification error:', error);
+    return res.status(500).json({ error: 'Verification failed' });
+  }
+}
+```
+
+### Multiple Price Tiers
+
+Offer different content at different prices:
+
+```typescript
+const contentTiers = {
+  article: '0.05', // $0.05 per article
+  video: '0.25', // $0.25 per video
+  research: '1.00', // $1.00 per research paper
+  masterclass: '5.00', // $5.00 per masterclass
+};
+
+export function ContentLibrary() {
+  return (
+    <div>
+      {[
+        { id: '1', title: 'Breaking News', type: 'article' },
+        { id: '2', title: 'Tutorial: Radius SDK', type: 'video' },
+        { id: '3', title: 'Stablecoin Economics', type: 'research' },
+      ].map((item) => (
+        <ContentPaywall
+          key={item.id}
+          contentId={item.id}
+          title={item.title}
+          amount={contentTiers[item.type]}
+        >
+          <p>Content for {item.title}</p>
+        </ContentPaywall>
+      ))}
+    </div>
+  );
+}
+```
+
+## Benefits of Radius Micropayments
+
+### For Users
+
+- **Lower barrier than subscriptions** — Pay $0.10 for one article instead of $15/month
+- **No tracking required** — Stablecoins provide value; ads and trackers don't
+- **Global access** — Pay with Radius in any country; instant settlement
+- **Instant access** — Content unlocks immediately after payment confirmation
+
+### For Creators
+
+- **Higher effective revenue** — Every engaged reader becomes a paying user
+- **No chargeback risk** — Stablecoin transactions are final; no refund disputes
+- **Direct payment** — Money goes directly to you; no subscription platform taking 30%
+- **Flexible pricing** — Set different prices for articles, videos, research—whatever works for your audience
+
+### For Both
+
+- **No intermediaries** — Direct creator-to-reader transactions
+- **Instant settlement** — Money available immediately, not locked up for 30 days
+- **Low transaction cost** — Radius handles gas via Turnstile; you pay almost nothing per transaction
+- **Works globally** — Stablecoins work in any country; currency conversion handled on-chain
+
+<Callout type="success">
+With Radius, a creator earning $0.10 per article only needs 100 readers per day to generate $1,000/month. That's achievable for most niche content creators.
+</Callout>
+
+## Use Cases
+
+Micropayments work for any content creators want compensation for:
+
+- **News & Journalism** — Articles, investigations, breaking news
+- **Video Content** — Tutorials, documentaries, educational videos
+- **Research & Data** — Academic papers, market research, whitepapers
+- **Premium Tutorials** — In-depth guides, programming courses, design resources
+- **Podcasts** — Individual episode access or full-library unlock
+- **Photography & Art** — High-resolution downloads, exclusive collections
+- **Gaming Content** — Cosmetics, level packs, exclusive streams
+- **Expert Advice** — Consultations, AMA sessions, email support tiers
+
+## Getting Started
+
+### 1. Install Dependencies
+
+```bash
+pnpm add @radiustechsystems/sdk wagmi viem @tanstack/react-query
+```
+
+### 2. Configure wagmi
+
+```typescript
+import { WagmiProvider, createConfig, http } from 'wagmi';
+import { radiusTestnet } from '@radiustechsystems/sdk';
+import { injected } from 'wagmi/connectors';
+
+const config = createConfig({
+  chains: [radiusTestnet],
+  connectors: [injected()],
+  transports: {
+    [radiusTestnet.id]: http(),
+  },
+});
+
+export function App({ children }) {
+  return <WagmiProvider config={config}>{children}</WagmiProvider>;
+}
+```
+
+### 3. Wrap Your App
+
+```typescript
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
+
+export default function RootApp() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <App>
+        <YourContent />
+      </App>
+    </QueryClientProvider>
+  );
+}
+```
+
+### 4. Deploy and Test
+
+Test with Radius Testnet before going live:
+
+```bash
+# Get free test tokens from the faucet
+# https://testnet.radiustech.xyz/testnet/faucet
+
+# Deploy your dapp and test payments
+# Once verified, switch to mainnet
+```
+
+<Callout type="warning">
+Always test payments on Radius Testnet first. Use the faucet to get free test SBC tokens: https://testnet.radiustech.xyz/testnet/faucet
+</Callout>
+
+## Best Practices
+
+1. **Show the price upfront** — Users hate surprises. Display the cost before they click "unlock"
+2. **Make wallet connection obvious** — If not connected, guide users to connect before payment
+3. **Handle network errors gracefully** — Show retry buttons if payment fails
+4. **Store payment receipts** — Keep transaction hashes for support and analytics
+5. **Offer value for the price** — $0.10 articles should be substantial; avoid paywalling single paragraphs
+6. **Test on testnet first** — Always verify payment flow before production
+7. **Monitor gas costs** — Radius fees are low, but still track transaction costs
+
+## Scaling Considerations
+
+- **Batch settlements** — Collect multiple payments, settle once daily to save costs
+- **Tiered content** — Use content length/quality to justify different price points
+- **Bundle offers** — Sell article packs ("10 articles for $0.50") to increase AOV
+- **Incentivize loyalty** — Offer discounts to frequent readers or newsletter subscribers
+- **Track conversion** — Monitor which price points convert best for different content types
+
+<Callout type="info">
+Radius transactions cost nearly nothing to process. A $0.10 article payment costs less than $0.01 in fees, so almost all revenue goes to the creator.
+</Callout>
+
+## What's Next
+
+- **[Quick Start - First Payment](/build-deploy/quick-start-first-payment)** — Send your first transaction in 5 minutes
+- **[Wallet Integration](/build-deploy/wallet-integration)** — Connect MetaMask, wagmi, and other wallets
+- **[SDK Reference](/developer-resources/sdks-typescript)** — Full Radius SDK documentation
+- **[Stablecoin-Native Fees](/differentiators/stablecoin-native-fees)** — How Radius handles transaction fees
+
+---
+
+**Ready to monetize?** Build your first paywall, test on testnet, and start earning from every engaged reader.

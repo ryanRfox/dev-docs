@@ -1,0 +1,76 @@
+---
+title: Contract Addresses
+description: Deployed contract addresses and network configuration for Radius Testnet.
+---
+
+# Contract Addresses
+
+This page provides canonical addresses for core contracts deployed on Radius Testnet. These addresses are used for integrations, testing, and local development.
+
+## Network Configuration
+
+Use these settings to connect to Radius Testnet:
+
+| Setting | Value |
+|---------|-------|
+| **Network Name** | Radius Testnet |
+| **RPC Endpoint** | `https://rpc.testnet.radiustech.xyz` |
+| **Chain ID** | `1223953` |
+| **Currency Symbol** | SBC |
+| **Block Explorer** | `https://dashboard.radiustech.xyz/` |
+| **Faucet** | `https://testnet.radiustech.xyz/testnet/faucet` |
+
+## Core Contracts
+
+### SBC Token
+
+**Address:**
+```
+0xF966020a30946A64B39E2e243049036367590858
+```
+
+Stablecoin used for gas fees on Radius Testnet. Use this token when paying transaction fees through account abstraction or testing fee mechanisms.
+
+## ERC-4337 Contracts
+
+### EntryPoint v0.7
+
+**Address:**
+```
+0x9b443e4bd122444852B52331f851a000164Cc83F
+```
+
+ERC-4337 entry point contract for account abstraction. This is the primary contract for submitting user operations and managing bundlers on Radius Testnet.
+
+### SimpleAccountFactory
+
+**Address:**
+```
+0x4DEbDe0Be05E51432D9afAf61D84F7F0fEA63495
+```
+
+ERC-4337 simple account factory for deploying and managing smart contract wallets. Use this to deploy deterministic smart contract accounts.
+
+## Utility Contracts
+
+### Permit2
+
+**Address:**
+```
+0x000000000022d473030f116ddee9f6b43ac78ba3
+```
+
+Uniswap Permit2 contract for efficient token approvals and transfers. Enables gasless token approval mechanisms through signatures.
+
+### Create2 Factory
+
+**Address:**
+```
+0x4e59b44847b379578588920cA78FbF26c0B4956C
+```
+
+Arachnid deterministic deployment factory for creating contracts at predictable addresses. Useful for cross-chain and upgrade patterns.
+
+---
+
+**Note:** Mainnet contract addresses will be added once Radius launches on mainnet.

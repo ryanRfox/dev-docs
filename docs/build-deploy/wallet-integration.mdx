@@ -1,0 +1,440 @@
+---
+title: Wallet Integration
+description: Connect your web app to Radius Network using MetaMask, wagmi, viem, and other EIP-1193 compatible wallets.
+---
+
+# Wallet Integration
+
+Radius Network integrates seamlessly with any EIP-1193 compatible wallet. This guide covers practical implementation patterns for connecting wallets, adding the Radius Network, and signing transactions.
+
+## Supported Wallets
+
+Radius Network works with all major Ethereum-compatible wallets:
+
+- **MetaMask** - Industry standard browser extension
+- **Rainbow** - Mobile-first wallet with excellent UX
+- **WalletConnect** - QR-code based connection for mobile wallets
+- **Coinbase Wallet** - Native web3 support
+- **Trust Wallet** - Mobile wallet with dApp browser
+- **Any EIP-1193 provider** - Direct integration via `window.ethereum`
+
+All wallets communicate through the EIP-1193 standard, so the same integration code works across different wallet implementations.
+
+## Adding Radius Network
+
+Before users can transact, they need the Radius Network configured in their wallet. You can add it programmatically using the `wallet_addEthereumChain` RPC method.
+
+### Network Configuration
+
+Use this configuration object for Radius Testnet:
+
+```javascript
+const radiusTestnet = {
+  chainId: '0x12ad11', // 1223953 in decimal
+  chainName: 'Radius Testnet',
+  nativeCurrency: {
+    name: 'USD',
+    symbol: 'USD',
+    decimals: 18,
+  },
+  rpcUrls: ['https://rpc.testnet.radiustech.xyz'],
+  blockExplorerUrls: ['https://dashboard.radiustech.xyz/'],
+};
+```
+
+### Adding the Network to MetaMask
+
+Prompt users to add Radius Network to their wallet:
+
+```javascript
+async function addRadiusNetwork() {
+  if (!window.ethereum) {
+    console.error('MetaMask not detected');
+    return;
+  }
+
+  try {
+    await window.ethereum.request({
+      method: 'wallet_addEthereumChain',
+      params: [radiusTestnet],
+    });
+    console.log('Radius Network added successfully');
+  } catch (error) {
+    if (error.code === 4001) {
+      console.log('User rejected network addition');
+    } else {
+      console.error('Failed to add network:', error);
+    }
+  }
+}
+```
+
+Call this function on page load or from an "Add Network" button. If the network already exists, the wallet will switch to it.
+
+## Using wagmi (Recommended for React)
+
+[wagmi](https://wagmi.sh) is the recommended way to integrate wallets in React applications. The Radius SDK exports a wagmi-compatible chain definition.
+
+### Setup
+
+```bash
+pnpm add wagmi viem @tanstack/react-query @radiustechsystems/sdk
+```
+
+### Configure wagmi
+
+```typescript
+import { WagmiProvider, createConfig, http } from 'wagmi';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { radiusTestnet } from '@radiustechsystems/sdk';
+import { injected } from 'wagmi/connectors';
+
+const config = createConfig({
+  chains: [radiusTestnet],
+  connectors: [injected()],
+  transports: {
+    [radiusTestnet.id]: http(),
+  },
+});
+
+const queryClient = new QueryClient();
+
+export function App({ children }) {
+  return (
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
+}
+```
+
+### Connect Wallet
+
+```typescript
+import { useConnect, useAccount, useDisconnect } from 'wagmi';
+
+function ConnectButton() {
+  const { connect, connectors, isPending } = useConnect();
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+
+  if (isConnected) {
+    return (
+      <div>
+        <p>Connected: {address}</p>
+        <button onClick={() => disconnect()}>Disconnect</button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {connectors.map((connector) => (
+        <button
+          key={connector.id}
+          onClick={() => connect({ connector })}
+          disabled={isPending}
+        >
+          {connector.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+### Send Transaction with wagmi
+
+```typescript
+import { useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
+import { parseEther } from 'viem';
+
+function SendTransaction() {
+  const { sendTransaction, data: hash, isPending, error } = useSendTransaction();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  return (
+    <div>
+      <button
+        onClick={() => sendTransaction({
+          to: '0x742d35Cc6634C0532925a3b844Bc9e7595f7E9F1',
+          value: parseEther('0.1'),
+        })}
+        disabled={isPending}
+      >
+        {isPending ? 'Sending...' : 'Send 0.1 USD'}
+      </button>
+
+      {hash && <p>Hash: {hash}</p>}
+      {isConfirming && <p>Confirming...</p>}
+      {isSuccess && <p>Transaction confirmed!</p>}
+      {error && <p>Error: {error.message}</p>}
+    </div>
+  );
+}
+```
+
+## Using viem Directly
+
+For non-React applications or when you need more control, use viem directly.
+
+### Connect Wallet
+
+```typescript
+import { createWalletClient, createPublicClient, custom, http } from 'viem';
+import { radiusTestnet } from '@radiustechsystems/sdk';
+
+async function connectWallet() {
+  if (!window.ethereum) {
+    throw new Error('MetaMask not installed');
+  }
+
+  // Create wallet client for signing
+  const walletClient = createWalletClient({
+    chain: radiusTestnet,
+    transport: custom(window.ethereum),
+  });
+
+  // Create public client for reading
+  const publicClient = createPublicClient({
+    chain: radiusTestnet,
+    transport: http(),
+  });
+
+  // Request account access
+  const [address] = await walletClient.requestAddresses();
+  console.log('Connected address:', address);
+
+  return { walletClient, publicClient, address };
+}
+```
+
+### Send Transaction with viem
+
+```typescript
+import { parseEther } from 'viem';
+
+async function sendTransaction(walletClient, publicClient, address, to, amount) {
+  try {
+    // Send transaction
+    const hash = await walletClient.sendTransaction({
+      account: address,
+      to,
+      value: parseEther(amount),
+    });
+
+    console.log('Transaction sent:', hash);
+
+    // Wait for receipt (usually instant on Radius)
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+    if (receipt.status === 'success') {
+      console.log('Transaction confirmed');
+      return receipt;
+    } else {
+      console.error('Transaction reverted');
+      return null;
+    }
+  } catch (error) {
+    console.error('Transaction error:', error);
+    throw error;
+  }
+}
+```
+
+## Using ethers.js
+
+ethers.js v6 also works with Radius:
+
+```typescript
+import { BrowserProvider, parseEther } from 'ethers';
+
+async function connectWithEthers() {
+  if (!window.ethereum) {
+    throw new Error('MetaMask not installed');
+  }
+
+  const provider = new BrowserProvider(window.ethereum);
+  await provider.send('eth_requestAccounts', []);
+  const signer = await provider.getSigner();
+  const address = await signer.getAddress();
+
+  return { provider, signer, address };
+}
+
+async function sendWithEthers(signer, to, amount) {
+  const tx = await signer.sendTransaction({
+    to,
+    value: parseEther(amount),
+  });
+
+  console.log('Transaction sent:', tx.hash);
+  const receipt = await tx.wait();
+
+  // Note: ethers uses status === 1 for success
+  if (receipt.status === 1) {
+    console.log('Transaction confirmed');
+  }
+
+  return receipt;
+}
+```
+
+## Transaction Details
+
+### Radius Transaction Characteristics
+
+- **Stablecoin fees** - Gas is paid in stablecoins via the Turnstile mechanism
+- **Immediate finality** - Transactions are finalized in the next block
+- **Standard gas estimation** - Wallets estimate gas normally; Radius handles fee conversion
+
+### Connection Flow
+
+1. Check if `window.ethereum` exists (wallet is installed)
+2. Call `eth_requestAccounts` to prompt user for permission
+3. Retrieve the user's primary address
+4. Store the address for subsequent transactions
+
+## Error Handling
+
+Handle common wallet errors gracefully:
+
+```typescript
+async function handleWalletError(error) {
+  // User rejected the request
+  if (error.code === 4001) {
+    return { success: false, reason: 'rejected' };
+  }
+
+  // Wallet not installed
+  if (error.code === -32603 || error.message?.includes('not defined')) {
+    return { success: false, reason: 'not_installed' };
+  }
+
+  // Network not added
+  if (error.code === 4902) {
+    return { success: false, reason: 'wrong_network' };
+  }
+
+  // Insufficient balance
+  if (error.message?.includes('insufficient funds')) {
+    return { success: false, reason: 'insufficient_balance' };
+  }
+
+  // Transaction reverted
+  if (error.message?.includes('reverted')) {
+    return { success: false, reason: 'reverted' };
+  }
+
+  return { success: false, reason: 'unknown', error };
+}
+```
+
+### Common Error Scenarios
+
+| Error Code | Cause | Solution |
+|------------|-------|----------|
+| `4001` | User rejected request | Inform user and retry |
+| `4902` | Network not added | Call `wallet_addEthereumChain` |
+| `Insufficient funds` | Balance too low | Check balance before sending |
+| `Already pending` | Duplicate tx | Debounce submit button |
+| `Reverted` | Contract logic failed | Check contract conditions |
+
+## Best Practices
+
+1. **Show loading states** - Disable UI while waiting for wallet response
+2. **Display transaction hash** - Let users view progress on the block explorer
+3. **Handle disconnection** - Listen for `disconnect` events and reset state
+4. **Validate addresses** - Ensure addresses are valid before sending
+5. **Debounce transactions** - Prevent accidental duplicate submissions
+
+## Complete React Example
+
+```typescript
+import { useState } from 'react';
+import { createWalletClient, createPublicClient, custom, http, parseEther } from 'viem';
+import { radiusTestnet } from '@radiustechsystems/sdk';
+
+export default function WalletApp() {
+  const [address, setAddress] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [txHash, setTxHash] = useState<string | null>(null);
+
+  const connectWallet = async () => {
+    try {
+      setLoading(true);
+
+      const walletClient = createWalletClient({
+        chain: radiusTestnet,
+        transport: custom(window.ethereum!),
+      });
+
+      const [addr] = await walletClient.requestAddresses();
+      setAddress(addr);
+    } catch (error) {
+      console.error('Connection failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendUsd = async () => {
+    if (!address) return;
+
+    try {
+      setLoading(true);
+
+      const walletClient = createWalletClient({
+        chain: radiusTestnet,
+        transport: custom(window.ethereum!),
+      });
+
+      const publicClient = createPublicClient({
+        chain: radiusTestnet,
+        transport: http(),
+      });
+
+      const hash = await walletClient.sendTransaction({
+        account: address as `0x${string}`,
+        to: '0x742d35Cc6634C0532925a3b844Bc9e7595f7E9F1',
+        value: parseEther('0.1'),
+      });
+
+      setTxHash(hash);
+
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      console.log('Status:', receipt.status);
+    } catch (error) {
+      console.error('Transaction failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      {address ? (
+        <div>
+          <p>Connected: {address}</p>
+          {txHash && <p>Last TX: {txHash}</p>}
+          <button onClick={sendUsd} disabled={loading}>
+            {loading ? 'Sending...' : 'Send 0.1 USD'}
+          </button>
+        </div>
+      ) : (
+        <button onClick={connectWallet} disabled={loading}>
+          {loading ? 'Connecting...' : 'Connect Wallet'}
+        </button>
+      )}
+    </div>
+  );
+}
+```
+
+## Next Steps
+
+- **[Smart Contract Deployment](/build-deploy/smart-contract-deploy)** — Deploy Solidity contracts on Radius
+- **[SDK Reference](/developer-resources/sdks-typescript)** — Full SDK documentation
+- **[Stablecoin-Native Fees](/differentiators/stablecoin-native-fees)** — How gas fees work on Radius

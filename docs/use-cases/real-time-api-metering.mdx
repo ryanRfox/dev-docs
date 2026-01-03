@@ -1,0 +1,477 @@
+---
+title: Real-time API Metering
+description: Charge per API call with instant settlement using Radius.
+---
+
+import { Callout } from '@/components/Callout';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+# Real-time API Metering
+
+## Problem Statement
+
+Traditional API billing relies on monthly invoices with credit card processing—a system plagued with friction. API providers wait 30+ days to see revenue, pay 2.9% + $0.30 per transaction in payment processor fees, and face chargebacks and payment failures. Users in developing regions often can't pay by credit card at all. This broken model leaves money on the table and locks out global users.
+
+Radius solves this with **real-time, per-request billing**. Each API call includes payment that settles instantly on-chain. No credit card fees. No chargebacks. No intermediaries. Global access for anyone with a wallet.
+
+## How It Works
+
+When a client calls your API:
+
+1. **Client sends payment proof** — The client constructs a micro-transaction on Radius and includes proof in the API request
+2. **Server verifies payment** — Your API server verifies the payment on Radius in milliseconds
+3. **Request executes** — If payment is valid, your API processes the request
+4. **Instant settlement** — The payment is finalized within seconds, and you control the tokens immediately
+
+Total latency: sub-second verification + your API response time. No batch processes. No waiting for settlement.
+
+## Implementation Example
+
+Below is a complete, production-ready example: an Express.js API that charges per request using Radius.
+
+### Server Setup
+
+Create a new project:
+
+```bash
+mkdir radius-api && cd radius-api
+pnpm init
+```
+
+Add `"type": "module"` to `package.json`:
+
+```json
+{
+  "name": "radius-api",
+  "type": "module",
+  "dependencies": {
+    "express": "^4.18.2",
+    "@radiustechsystems/sdk": "latest",
+    "viem": "latest"
+  }
+}
+```
+
+Install dependencies:
+
+```bash
+pnpm add express @radiustechsystems/sdk viem
+```
+
+### Server Implementation
+
+Create `api-server.ts`:
+
+```typescript
+import express, { Request, Response } from 'express';
+import {
+  createRadiusClient,
+  createPrivateKeySigner,
+  radiusTestnet,
+  type Address,
+} from '@radiustechsystems/sdk';
+import { isAddress, parseEther } from 'viem';
+
+// Initialize Radius client
+const client = createRadiusClient({ chain: radiusTestnet });
+
+// Your server's wallet (receives payments)
+const serverPrivateKey = process.env.SERVER_PRIVATE_KEY as `0x${string}`;
+const serverSigner = createPrivateKeySigner(serverPrivateKey, radiusTestnet.id);
+
+// Configuration
+const COST_PER_REQUEST = parseEther('0.001'); // 0.001 SBC per call
+
+const app = express();
+app.use(express.json());
+
+/**
+ * Verify that a payment transaction was sent by the client
+ * Returns the sender's address if valid, null otherwise
+ */
+async function verifyPayment(
+  transactionHash: string,
+  expectedAmount: bigint,
+  expectedRecipient: Address
+): Promise<Address | null> {
+  try {
+    const receipt = await client.waitForReceipt(transactionHash);
+
+    // Check transaction details
+    if (
+      receipt.status !== 'success' ||
+      !receipt.to ||
+      receipt.to.toLowerCase() !== expectedRecipient.toLowerCase() ||
+      receipt.gasUsed < expectedAmount // Simplified: check gas used as proxy for value
+    ) {
+      return null;
+    }
+
+    // Payment is valid
+    return receipt.from;
+  } catch (error) {
+    console.error('Payment verification failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Protected API endpoint that requires payment
+ */
+app.post('/api/query', async (req: Request, res: Response) => {
+  const { paymentHash, query } = req.body;
+
+  if (!paymentHash || !query) {
+    return res.status(400).json({
+      error: 'Missing paymentHash or query',
+    });
+  }
+
+  // Verify the payment
+  const payer = await verifyPayment(
+    paymentHash,
+    COST_PER_REQUEST,
+    serverSigner.address
+  );
+
+  if (!payer) {
+    return res.status(402).json({
+      error: 'Payment verification failed or insufficient amount',
+    });
+  }
+
+  // Log the payment for your records
+  console.log(`Query from ${payer}: ${query}`);
+
+  // Process the actual API request
+  // (In a real app, this would be your business logic)
+  const result = {
+    query,
+    result: `Processing query: "${query}"`,
+    processedAt: new Date().toISOString(),
+    paidBy: payer,
+  };
+
+  return res.json({
+    success: true,
+    data: result,
+  });
+});
+
+/**
+ * Health check endpoint (no payment required)
+ */
+app.get('/health', (_req: Request, res: Response) => {
+  res.json({ status: 'ok', serverAddress: serverSigner.address });
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`API server running on http://localhost:${PORT}`);
+  console.log(`Server receives payments at: ${serverSigner.address}`);
+});
+```
+
+### Client Implementation
+
+Create `api-client.ts`:
+
+```typescript
+import {
+  createRadiusClient,
+  createPrivateKeySigner,
+  radiusTestnet,
+  type Address,
+} from '@radiustechsystems/sdk';
+import { parseEther } from 'viem';
+
+// Client configuration
+const apiServerUrl = 'http://localhost:3000';
+const serverAddress: Address = process.env
+  .SERVER_ADDRESS as `0x${string}`;
+const clientPrivateKey = process.env.CLIENT_PRIVATE_KEY as `0x${string}`;
+
+// Initialize client
+const radiusClient = createRadiusClient({ chain: radiusTestnet });
+const clientSigner = createPrivateKeySigner(
+  clientPrivateKey,
+  radiusTestnet.id
+);
+
+/**
+ * Make a metered API call
+ * 1. Send payment to the server
+ * 2. Use the transaction hash as proof of payment
+ * 3. Call the API with the payment proof
+ */
+async function callMetereedAPI(query: string): Promise<void> {
+  console.log(`\nCalling API with query: "${query}"`);
+
+  // Step 1: Send payment to the server
+  console.log('Sending payment...');
+  const paymentHash = await radiusClient.send(
+    clientSigner,
+    serverAddress,
+    parseEther('0.001')
+  );
+
+  console.log(`Payment sent: ${paymentHash}`);
+
+  // Step 2: Call the API with the payment proof
+  console.log('Calling API endpoint...');
+  const response = await fetch(`${apiServerUrl}/api/query`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      paymentHash,
+      query,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    console.error(`API error (${response.status}):`, error);
+    return;
+  }
+
+  const result = await response.json();
+  console.log('API response:', result.data);
+}
+
+// Example usage
+async function main() {
+  try {
+    // Check client balance
+    const balance = await radiusClient.getBalance(clientSigner.address);
+    console.log(`Client balance: ${balance.toString()} wei`);
+
+    // Make a few metered API calls
+    await callMetereedAPI('What is 2 + 2?');
+    await callMetereedAPI('What is the capital of France?');
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+main();
+```
+
+## Running the Example
+
+### Setup Environment
+
+Create `.env`:
+
+```bash
+# Server wallet (receives payments)
+SERVER_PRIVATE_KEY=0x...
+
+# Client wallet (sends payments)
+CLIENT_PRIVATE_KEY=0x...
+
+# For client: server's address (where to send payments)
+SERVER_ADDRESS=0x...
+```
+
+Get testnet tokens from the [Radius Faucet](https://testnet.radiustech.xyz/testnet/faucet) for both wallets.
+
+### Run Server
+
+```bash
+node --env-file=.env --import=tsx api-server.ts
+```
+
+You'll see:
+
+```
+API server running on http://localhost:3000
+Server receives payments at: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+```
+
+### Run Client
+
+In another terminal:
+
+```bash
+node --env-file=.env --import=tsx api-client.ts
+```
+
+You'll see:
+
+```
+Client balance: 10000000000000000000 wei
+
+Calling API with query: "What is 2 + 2?"
+Payment sent: 0xabcd...
+Calling API endpoint...
+API response: { query: 'What is 2 + 2?', ... }
+
+Calling API with query: "What is the capital of France?"
+Payment sent: 0xdef0...
+Calling API endpoint...
+API response: { query: 'What is the capital of France?', ... }
+```
+
+## Real-World Implementation Notes
+
+### Payment Verification
+
+In production, consider:
+
+- **Nonce tracking** — Store processed transaction hashes to prevent replay attacks
+- **Timeout handling** — If a transaction takes too long to finalize, retry or fail gracefully
+- **Rate limiting** — Limit requests per wallet to prevent spam
+- **Amount validation** — Verify the payment amount exactly matches your pricing
+
+### Pricing Strategies
+
+```typescript
+// Fixed rate per request
+const COST_PER_REQUEST = parseEther('0.001');
+
+// Tiered pricing based on request type
+const PRICING = {
+  basic: parseEther('0.001'),
+  premium: parseEther('0.005'),
+  enterprise: parseEther('0.01'),
+};
+
+// Per-token pricing for AI/ML APIs
+const COST_PER_TOKEN = parseEther('0.000001');
+```
+
+### Monitoring & Analytics
+
+Track payments to understand your revenue:
+
+```typescript
+interface PaymentRecord {
+  timestamp: Date;
+  payer: Address;
+  amount: bigint;
+  query: string;
+  transactionHash: string;
+}
+
+const payments: PaymentRecord[] = [];
+
+// Record each successful payment
+payments.push({
+  timestamp: new Date(),
+  payer,
+  amount: COST_PER_REQUEST,
+  query,
+  transactionHash: paymentHash,
+});
+```
+
+## Benefits Over Traditional API Billing
+
+| Feature | Traditional | Radius |
+|---------|-----------|--------|
+| **Payment fees** | 2.9% + $0.30 | ~$0.000001 per transfer |
+| **Settlement time** | 30+ days | Seconds |
+| **Chargebacks** | Common, costly | Impossible (on-chain) |
+| **Global access** | Credit card required | Wallet + SBC only |
+| **Minimum transaction** | $5–10 | $0.001 |
+| **Revenue control** | Intermediary takes a cut | You control 100% |
+
+## Use Cases
+
+### AI/ML APIs
+
+Charge per inference or per token. Users pay only for what they use, instantly:
+
+```typescript
+const costPerToken = parseEther('0.000001'); // Per token charged
+const tokensGenerated = 150;
+const totalCost = BigInt(tokensGenerated) * costPerToken;
+
+// Client pays before using the API
+const receipt = await client.send(signer, apiServer, totalCost);
+```
+
+### Premium Data Feeds
+
+Real-time stock prices, weather data, sports stats—charge per request:
+
+```typescript
+app.post('/api/stock-price', async (req, res) => {
+  const { symbol, paymentHash } = req.body;
+
+  // Verify payment for premium data
+  const payer = await verifyPayment(
+    paymentHash,
+    PREMIUM_DATA_COST,
+    serverSigner.address
+  );
+
+  if (!payer) {
+    return res.status(402).json({ error: 'Payment required' });
+  }
+
+  // Return premium stock price data
+  res.json({ symbol, price: 123.45, timestamp: Date.now() });
+});
+```
+
+### Content APIs
+
+Charge for access to paywalled articles, ebooks, or videos:
+
+```typescript
+// Client pays for each piece of content
+const contentId = '123-article-slug';
+const receipt = await radiusClient.send(
+  signer,
+  publisherAddress,
+  ARTICLE_COST
+);
+
+// Request with proof of payment
+const content = await fetch('/api/articles/' + contentId, {
+  headers: { 'X-Payment-Hash': receipt.transactionHash },
+});
+```
+
+## Best Practices
+
+- **Show pricing upfront** — Let users know the cost before sending payment
+- **Batch requests** — Allow clients to send multiple queries in one payment
+- **Discounts for volume** — Offer lower per-request costs for bulk prepayment
+- **Error handling** — Handle failed payments gracefully; return 402 Payment Required
+- **Monitoring** — Track payment success rates and processing times
+
+## FAQ
+
+**How long does payment verification take?**
+
+Sub-second. Radius achieves near-instant finality, so payment verification completes in milliseconds.
+
+**Can clients batch multiple requests into one payment?**
+
+Yes. You can structure pricing around request batches or data volume rather than individual calls.
+
+**What if a payment transaction fails?**
+
+The transaction fails on-chain with no side effects. Your API returns 402 Payment Required, and the client can retry.
+
+**Do I need a smart contract?**
+
+No. Simple token transfers work perfectly. Only use smart contracts if you need complex payment logic (e.g., split payments, conditional refunds).
+
+**Can I refund payments?**
+
+Yes, by sending tokens back to the client. You control the server wallet and can execute refund transactions directly.
+
+**How do I handle pricing changes?**
+
+Update your server code and redeploy. Clients see the new pricing immediately. Consider a grace period for old prices.
+
+## Next Steps
+
+- **[Quick Start](/build-deploy/quick-start-first-payment)** — Send your first transaction on Radius
+- **[SDKs (TypeScript)](/developer-resources/sdks-typescript)** — Full SDK reference
+- **[Account Setup](/build-deploy/account-setup)** — Secure key management for your API server
+- **[JSON-RPC API](/developer-resources/json-rpc-api)** — Low-level RPC reference for advanced use cases

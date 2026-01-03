@@ -1,0 +1,216 @@
+# Architected for Scale
+
+Radius is architected for scale that matches the internet itself. 2.5 million TPS tested. 200ms settlement. Linear scalability — every addition of compute makes the system faster. This page shows how it works and proves it with live metrics.
+
+## Performance Numbers
+
+| Metric | Value |
+|--------|-------|
+| **Throughput** | 2.5M TPS (tested) |
+| **Settlement** | 200ms |
+| **Transaction cost** | $0.001 |
+| **Finality** | Immediate |
+
+These aren't theoretical limits — they're demonstrated capabilities under load testing.
+
+## Linear Scalability
+
+Traditional blockchains hit throughput ceilings. Adding more nodes doesn't help because every node must process every transaction. Radius takes a different approach: sharded state with parallel execution.
+
+### The Sharding Model
+
+Radius distributes state across multiple independent shard clusters:
+
+```mermaid
+flowchart TB
+    subgraph Keyspace["Keyspace: 000000 → ffffff"]
+        direction LR
+    end
+
+    Keyspace --> S0
+    Keyspace --> S1
+    Keyspace --> S2
+
+    subgraph S0["Shard 0<br/>000000-555554"]
+        R0["3-node Raft cluster"]
+    end
+
+    subgraph S1["Shard 1<br/>555555-aaaaaa"]
+        R1["3-node Raft cluster"]
+    end
+
+    subgraph S2["Shard 2<br/>aaaaaa-ffffff"]
+        R2["3-node Raft cluster"]
+    end
+```
+
+Each shard:
+- Runs as a 3-node Raft cluster (tolerates 1 node failure)
+- Stores a partition of the global state
+- Processes transactions independently of other shards
+
+### Why This Scales Linearly
+
+| Shards | Keyspace per shard | Throughput |
+|--------|-------------------|------------|
+| 1 | 100% | 1x |
+| 2 | 50% each | ~2x |
+| 4 | 25% each | ~4x |
+| N | 1/N each | ~Nx |
+
+Double the shards, approximately double the throughput for non-conflicting workloads. The system supports up to **16.7 million shards** (24-bit shard indexing).
+
+## How Sharding Works
+
+### State Partitioning
+
+Keys are hashed and distributed across shards via a prefix tree. When the system scales:
+
+1. New shard cluster starts
+2. Routing table updates with new keyspace assignment
+3. Keys migrate lazily on first access
+4. Old shard forwards lookups to new location
+
+### Zero-Downtime Scaling
+
+Scaling operations happen without interrupting service:
+
+```mermaid
+sequenceDiagram
+    participant Agent
+    participant Router
+    participant OldShard as Shard 0
+    participant NewShard as Shard 1
+
+    Note over Router: Keyspace split: Shard 1 now owns 800000-ffffff
+    Agent->>Router: Where is key ABC (hash: 9f...)?
+    Router->>Agent: [Shard 1, Shard 0] (new first, old as fallback)
+    Agent->>NewShard: try_lock ABC
+    NewShard->>Agent: Empty (not migrated yet)
+    Agent->>OldShard: try_lock ABC
+    OldShard->>Agent: value: 0x55b3f5f2
+    Note over Agent: Migrate key to new shard
+    Agent->>NewShard: prepare(ABC = 0x55b3f5f2)
+    Agent->>OldShard: prepare(ABC = Migrated(Shard 1))
+    Agent->>NewShard: commit
+    Agent->>OldShard: commit
+```
+
+### Parallel Execution
+
+Transactions accessing different keys execute simultaneously. No global ordering required:
+
+```mermaid
+flowchart LR
+    subgraph Parallel["Execute in parallel"]
+        A["Transaction A: writes key X"] --> S0["Shard 0"]
+        B["Transaction B: writes key Y"] --> S1["Shard 1"]
+        C["Transaction C: writes key Z"] --> S2["Shard 2"]
+    end
+```
+
+Only transactions touching the same keys require coordination.
+
+## The Architecture
+
+Radius uses a distributed architecture based on [PArSEC](https://dci.mit.edu/s/p.pdf) (Parallel Sharded Transactions with Contracts):
+
+```mermaid
+flowchart TB
+    App["Application"] -->|JSON-RPC| FE
+    FE["Agent Frontend<br/><i>Rate limiting, pre-execution</i>"] --> BE
+    BE["Agent Backend<br/><i>Transaction execution, batching</i>"] --> S0 & S1 & S2 & SN
+
+    S0["Shard 0"]
+    S1["Shard 1"]
+    S2["Shard 2"]
+    SN["Shard N"]
+```
+
+### Why No Blocks?
+
+Traditional blockchains batch transactions into blocks for consensus and propagation. Radius eliminates these constraints:
+
+| Aspect | Blockchain | Radius |
+|--------|------------|--------|
+| Consensus | Global (all nodes agree on block) | Per-shard (Raft replication) |
+| Ordering | Sequential (one block at a time) | Parallel (independent shards) |
+| Propagation | Broadcast blocks to all nodes | Direct writes to relevant shards |
+| Finality | Probabilistic (wait for confirmations) | Immediate |
+
+### Per-Shard Consensus
+
+Instead of global consensus on a block of transactions, Radius achieves consensus per-shard using Raft. Each shard independently replicates its state changes. This means:
+
+- No mining or proof-of-work
+- No validator coordination overhead
+- No block production delays
+- Immediate finality once Raft commits
+
+## Congestion Control
+
+When multiple transactions compete for the same key, Radius uses intelligent batching:
+
+1. **Detection**: Shards track which keys cause transaction conflicts
+2. **Routing**: Frontend routes conflicting transactions to the same backend
+3. **Batching**: Backend executes conflicting transactions sequentially within a single batch
+4. **Efficiency**: One lock acquisition serves the entire batch
+
+```mermaid
+flowchart LR
+    subgraph Without["Without Batching"]
+        direction TB
+        T1["Tx1"] --> Lock1["Lock X"]
+        T2["Tx2"] --> Lock1
+        T3["Tx3"] --> Lock1
+        Lock1 -->|"conflicts"| X1["❌"]
+    end
+
+    subgraph With["With Batching"]
+        direction TB
+        Batch["Batch: Tx1, Tx2, Tx3"] -->|"single lock"| Lock2["Lock X"]
+        Lock2 -->|"execute sequentially"| OK["✓ No conflicts"]
+    end
+```
+
+## Specialized Shards
+
+Radius supports heterogeneous shard configurations for different access patterns:
+
+| Shard Type | Purpose | Use Case |
+|------------|---------|----------|
+| **Regular** | General state storage | Default workloads |
+| **Receipt** | Transaction receipts | Append-heavy, read-light |
+| **Edge** | Specific contracts/keys | High-traffic contracts |
+
+Edge shards allow routing high-traffic contracts to dedicated infrastructure without affecting the rest of the system.
+
+## Live Metrics
+
+Track real-time network performance:
+
+- [Dashboard →](https://dashboard.radiustech.xyz/) — Live TPS, settlement times, shard health
+
+## Load Test Results
+
+Performance validated under production-like conditions:
+
+| Test | Configuration | Result |
+|------|--------------|--------|
+| Sustained throughput | 32 shards, mixed workload | 2.5M TPS |
+| Settlement latency | P99 under load | <200ms |
+| Scaling linearity | 1→32 shards | ~30x throughput |
+
+## Compared to Other Approaches
+
+| Approach | Scaling Method | Consistency | Complexity |
+|----------|---------------|-------------|------------|
+| **L1 Blockchain** | Vertical (bigger nodes) | Global ordering | Low |
+| **Rollups/L2** | Multiple chains | Bridge-dependent | High |
+| **Radius** | Horizontal (add shards) | Per-shard consensus | Transparent |
+
+## Next Steps
+
+- [Designed for the Internet of Tomorrow](/differentiators/designed-for-internet-of-tomorrow) — EVM compatibility and differences
+- [JSON-RPC API](/developer-resources/json-rpc-api) — Complete API reference
+- [Quick Start](/build-deploy/quick-start) — Get from zero to first transaction

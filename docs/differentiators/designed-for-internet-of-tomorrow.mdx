@@ -1,0 +1,208 @@
+# Designed for the Internet of Tomorrow
+
+Radius is EVM-compatible — your Solidity contracts deploy without modification, your Hardhat scripts work, your ethers.js code works. But Radius isn't just another EVM chain. This page covers what works, what's different, and why those differences matter for the future of internet payments.
+
+## What Works
+
+Your existing Ethereum development workflow transfers directly to Radius:
+
+| Tool/Framework | Status |
+|----------------|--------|
+| **Solidity** | Fully supported (Osaka hardfork) |
+| **Foundry** | Compatible |
+| **Hardhat** | Compatible |
+| **ethers.js** | Compatible |
+| **viem** | Compatible |
+| **OpenZeppelin** | Compatible |
+| **Standard precompiles** | All Osaka precompiles available |
+
+### Deploy Existing Contracts
+
+```bash
+# Foundry
+forge create src/MyContract.sol:MyContract \
+  --rpc-url https://rpc.testnet.radiustech.xyz \
+  --private-key $PRIVATE_KEY
+
+# Hardhat
+npx hardhat run scripts/deploy.js --network radius
+```
+
+### Connect Your Application
+
+```typescript
+// ethers.js v6
+import { JsonRpcProvider } from "ethers";
+const provider = new JsonRpcProvider("https://rpc.testnet.radiustech.xyz");
+
+// viem
+import { createPublicClient, http } from "viem";
+const client = createPublicClient({
+  transport: http("https://rpc.testnet.radiustech.xyz")
+});
+```
+
+## What's Different from Other EVMs
+
+Radius optimizes for payments. This means deliberate differences from standard Ethereum behavior:
+
+### No Gas Auctions
+
+| Ethereum | Radius |
+|----------|--------|
+| Gas prices fluctuate with demand | Fixed $0.001 per transaction |
+| Users bid for block inclusion | No bidding, no MEV |
+| Priority fees for faster inclusion | All transactions process immediately |
+
+### Stablecoin Fees
+
+| Ethereum | Radius |
+|----------|--------|
+| Fees paid in ETH | Fees paid in stablecoins (SBC) |
+| Must hold native token | No separate gas token needed |
+| `eth_gasPrice` returns market rate | Returns `0x0` |
+
+### Faster Finality
+
+| Ethereum | Radius |
+|----------|--------|
+| ~12 minutes for high confidence | Immediate |
+| 12+ confirmations recommended | 0 confirmations needed |
+| Reorgs possible | No reorgs |
+
+## Not a Blockchain
+
+Radius provides smart contract execution without traditional blockchain overhead. Here's what that means for your code:
+
+### What You Keep
+
+- **Same execution model**: Your Solidity runs on the EVM
+- **Same tooling**: Foundry, Hardhat, and debugging tools work
+- **Same addresses**: 20-byte addresses, same derivation
+- **Same ABI**: Standard contract interfaces
+- **Same events**: Logs work identically
+
+### What Changes
+
+| Concept | Ethereum | Radius |
+|---------|----------|--------|
+| **Blocks** | Real, sequential | Synthetic (for compatibility) |
+| **Block confirmations** | Required for safety | Not needed |
+| **Pending transactions** | Mempool visible | No mempool |
+| **Native balance** | ETH balance | Returns augmented balance* |
+
+*`eth_getBalance` returns your actual balance plus the maximum native token you could receive by converting your SBC through the turnstile. This supports wallets that check balance before allowing transactions.
+
+### Practical Implications
+
+**Your contracts work unchanged:**
+```solidity
+// Standard ERC-20 interactions
+IERC20(token).transfer(recipient, amount);
+
+// Storage operations
+mapping(address => uint256) balances;
+balances[msg.sender] = 100;
+
+// Events
+emit Transfer(from, to, amount);
+```
+
+**Avoid native balance patterns:**
+```solidity
+// Don't do this (always returns 0)
+require(address(this).balance > 0);
+
+// Do this instead
+require(IERC20(feeToken).balanceOf(address(this)) > 0);
+```
+
+## The Security Model
+
+Traditional blockchains achieve security through mining (PoW) or staking (PoS). Radius uses a different model optimized for payment infrastructure:
+
+### Raft Consensus
+
+Each shard cluster runs Raft consensus:
+- 3 nodes per shard (tolerates 1 failure)
+- Leader election for writes
+- Log replication for durability
+- No mining, no staking, no validators
+
+### What This Means
+
+| Property | How Radius Achieves It |
+|----------|----------------------|
+| **Durability** | Raft log replication across 3 nodes |
+| **Consistency** | Strong consistency within each shard |
+| **Availability** | Automatic leader failover |
+| **Integrity** | Cryptographic transaction signing |
+
+### Trade-offs
+
+Radius is designed for payment infrastructure where:
+- Operators are known entities (not anonymous miners)
+- Speed and cost matter more than maximum decentralization
+- Immediate finality is required
+
+This is different from public blockchain security models. Choose based on your requirements.
+
+## Future-Proofing
+
+Radius is built for where the internet is going, not where it's been.
+
+### AI Agents
+
+Agents need to pay for things autonomously — APIs, data, compute. This requires:
+
+- **Immediate finality**: Agents can't wait for block confirmations
+- **Sub-cent fees**: Micro-transactions must be economically viable
+- **Stablecoin payments**: Agents shouldn't manage volatile assets
+
+Radius enables all three. See [Agentic Payments (x402)](/use-cases/agentic-payments-x402) for implementation patterns.
+
+### Micropayments
+
+When transactions cost $0.001, new business models become viable:
+
+- **Per-request API billing**: Charge per call, not monthly
+- **Content micropayments**: Pay per article, not subscription
+- **Streaming payments**: Pay by the second for compute
+
+Traditional blockchains can't economically support these patterns. Radius can.
+
+### EIP Support (Osaka)
+
+Radius tracks the Osaka hardfork via Revm 33.1.0:
+
+| EIP | Support |
+|-----|---------|
+| EIP-7702 | Set EOA account code |
+| EIP-1559 | Fee market (adapted for stablecoins) |
+| EIP-2930 | Access lists |
+| EIP-4844 | Blob transactions |
+
+### Precompiles
+
+All standard precompiles plus Radius extensions:
+
+| Address | Precompile |
+|---------|------------|
+| `0x01` - `0x0a` | Standard Ethereum precompiles |
+| `0x4Db27Fa...` | Radius Edge (external data) |
+| `0x07a2bA2...` | Debug utilities |
+
+## Network Configuration
+
+```
+Network Name: Radius Testnet
+RPC URL: https://rpc.testnet.radiustech.xyz
+Chain ID: 1223953
+Currency Symbol: USD (display only)
+```
+
+## Next Steps
+
+- [Architected for Scale](/differentiators/architected-for-scale) — How Radius achieves 2.5M TPS
+- Stablecoin-Native Fees *(coming soon)* — The Turnstile mechanism
+- [Smart Contract Deployment](/build-deploy/smart-contract-deploy) — Deploy your first contract

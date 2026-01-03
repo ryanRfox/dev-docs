@@ -1,0 +1,136 @@
+---
+title: Stablecoin-Native Fees
+description: Pay gas fees in stablecoins on Radius Network—a seamless way to handle transaction costs without requiring native tokens.
+---
+
+# Stablecoin-Native Fees
+
+## Overview
+
+Radius Network enables you to pay gas fees directly in stablecoins (SBC) rather than requiring native tokens. This eliminates a major friction point for users: the need to acquire and manage multiple tokens. On Radius, if your wallet has enough stablecoins to cover gas costs, you can send transactions without holding native tokens.
+
+This feature is called **Stablecoin-Native Fees**, and it works automatically—no special code, configuration, or wallet changes required.
+
+## How It Works
+
+When you submit a transaction, Radius uses a transparent mechanism to bridge the gap between stablecoin and native token needs:
+
+1. **Automatic Detection**: Radius detects when a user lacks sufficient native tokens to pay gas
+2. **SBC Conversion**: If the user holds enough stablecoins (SBC), Radius converts just enough SBC to provide the necessary native tokens
+3. **Single Transaction**: The conversion happens seamlessly as part of the same transaction execution
+4. **No Extra Charges**: Users are not charged gas for the conversion process itself
+
+The result is a smooth user experience where wallets show an "effective balance" that accounts for convertible stablecoins, so users see they can afford their transaction.
+
+## Developer Impact
+
+As a developer building on Radius Network, **you don't need to do anything special** to support Stablecoin-Native Fees. Here's what this means for you:
+
+- **No API Changes**: Standard Ethereum RPC calls work exactly as expected
+- **No Contract Modifications**: Your smart contracts don't need updates
+- **Transparent to Users**: Your users get the benefit automatically when they submit transactions
+- **Improved UX**: Users can transact with just stablecoins, reducing onboarding friction
+
+The feature handles everything behind the scenes. Your dApp works on Radius exactly like it works on any other EVM chain—but with better user experience.
+
+## RPC Behavior
+
+Radius implements Stablecoin-Native Fees consistently across all relevant RPC methods:
+
+### eth_sendRawTransaction
+When a user submits a signed transaction:
+- If they have enough native tokens, it executes normally
+- If they lack native tokens but have sufficient SBC, the conversion executes automatically
+- The transaction state is committed, including any SBC conversions
+- The user receives confirmation that their transaction succeeded
+
+### eth_call and eth_estimateGas
+When you simulate or estimate transaction costs:
+- Results assume the Stablecoin-Native Fee mechanism is available
+- If a user would lack native tokens, the simulation assumes the conversion happens
+- You get accurate estimates even if the user's wallet only contains stablecoins
+
+### eth_getBalance
+When wallets check user balances:
+- The returned balance includes native tokens the user currently holds
+- **Plus** the native token equivalent of their convertible stablecoins
+- This ensures wallets like MetaMask accurately represent what users can spend
+- The balance reflects the total gas-paying power available to the user
+
+## Pricing
+
+Stablecoin-Native Fees have a transparent, minimal cost structure:
+
+| Metric | Value |
+|--------|-------|
+| **Cost per transfer** | 0.0001¢ ($0.000001) |
+| **Transfers per $1** | 1,000,000 |
+| **Cost per 1,000 txns** | ~$0.001 |
+| **Minimum threshold** | 0.001 SBC |
+
+This pricing structure makes Stablecoin-Native Fees practical for all transaction volumes, from small payments to high-frequency trading.
+
+## Example Scenario
+
+Here's how Stablecoin-Native Fees work in practice:
+
+**User's Wallet State:**
+- Native tokens: 0
+- Stablecoins (SBC): $10
+
+**User Action:**
+- Submits a transaction requiring gas
+
+**What Happens:**
+1. Radius detects the user lacks native tokens
+2. Radius converts the required amount of SBC to native tokens
+3. The transaction executes with the converted native tokens
+4. Gas is paid, transaction completes
+
+**User Experience:**
+- No wallet switching needed
+- No bridging or swapping required
+- Transaction sent and confirmed in one step
+
+## When Conversion Activates
+
+Stablecoin-Native Fees activate automatically when both conditions are met:
+
+1. User's native token balance is insufficient to cover the transaction's gas cost
+2. User's SBC balance is sufficient to generate the required native tokens
+
+If either condition isn't met, the transaction fails with insufficient funds.
+
+## Best Practices
+
+While Stablecoin-Native Fees work automatically, keep these in mind:
+
+- **User Education**: Let users know they can transact with stablecoins alone
+- **Gas Estimation**: Use `eth_estimateGas` as normal—it accounts for conversions automatically
+- **Balance Display**: Consider showing "total transaction capacity" to help users understand their full spending power
+- **Error Handling**: Handle insufficient SBC the same way you'd handle insufficient funds on any chain
+
+## FAQ
+
+**Do I need to implement anything special in my dApp?**
+No. Stablecoin-Native Fees are handled by Radius automatically at the protocol level.
+
+**Will my smart contract code change?**
+No. Your contracts work unchanged. The conversion happens at the RPC level before your contract executes.
+
+**Can I disable Stablecoin-Native Fees?**
+No, and you don't need to. It's a protocol feature that benefits all users without affecting contract behavior.
+
+**What if a user lacks sufficient SBC?**
+The transaction fails with insufficient funds, like any other chain.
+
+**Are there security implications?**
+No. The conversion happens atomically within the same transaction, maintaining all security guarantees.
+
+**How does this affect gas calculations?**
+It doesn't. Use `eth_estimateGas` as normal—it returns accurate estimates.
+
+## Next Steps
+
+- **[JSON-RPC API](/developer-resources/json-rpc-api)** — Full RPC reference including eth_getBalance behavior
+- **[Quick Start](/build-deploy/quick-start-first-payment)** — Send your first transaction on Radius

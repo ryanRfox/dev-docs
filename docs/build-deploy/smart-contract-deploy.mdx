@@ -1,0 +1,304 @@
+# Smart Contract Deployment
+
+Deploy Solidity smart contracts to Radius using standard Ethereum tooling. No modifications needed for existing contracts.
+
+## Prerequisites
+
+- A funded wallet (get testnet tokens from the [faucet](https://testnet.radiustech.xyz/testnet/faucet))
+- An RPC key (included in faucet distribution)
+- Foundry or Hardhat installed
+
+## Network Configuration
+
+| Setting | Value |
+|---------|-------|
+| **RPC URL** | `https://rpc.testnet.radiustech.xyz` |
+| **Chain ID** | `1223953` |
+| **Fee Token** | SBC (`0xF966020a30946A64B39E2e243049036367590858`) |
+
+## Deploy with Foundry
+
+Foundry is the recommended toolchain for Radius development.
+
+### Installation
+
+```bash
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
+```
+
+### Create a Project
+
+```bash
+forge init my-project
+cd my-project
+```
+
+### Example Contract
+
+```solidity
+// src/Counter.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Counter {
+    uint256 public count;
+
+    function increment() public {
+        count += 1;
+    }
+
+    function decrement() public {
+        count -= 1;
+    }
+}
+```
+
+### Deploy
+
+```bash
+# Set your private key
+export PRIVATE_KEY=0x...
+
+# Deploy
+forge create src/Counter.sol:Counter \
+  --rpc-url https://rpc.testnet.radiustech.xyz \
+  --private-key $PRIVATE_KEY
+```
+
+**Output:**
+```
+Deployer: 0xYourAddress
+Deployed to: 0xContractAddress
+Transaction hash: 0x...
+```
+
+### Deploy with Constructor Arguments
+
+```bash
+forge create src/Token.sol:Token \
+  --rpc-url https://rpc.testnet.radiustech.xyz \
+  --private-key $PRIVATE_KEY \
+  --constructor-args "My Token" "MTK" 18
+```
+
+### Deploy Using Scripts
+
+```solidity
+// script/Deploy.s.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "forge-std/Script.sol";
+import "../src/Counter.sol";
+
+contract DeployScript is Script {
+    function run() external {
+        vm.startBroadcast();
+        new Counter();
+        vm.stopBroadcast();
+    }
+}
+```
+
+```bash
+forge script script/Deploy.s.sol \
+  --rpc-url https://rpc.testnet.radiustech.xyz \
+  --private-key $PRIVATE_KEY \
+  --broadcast
+```
+
+## Deploy with Hardhat
+
+### Installation
+
+```bash
+mkdir my-project && cd my-project
+npm init -y
+npm install --save-dev hardhat @nomicfoundation/hardhat-toolbox
+npx hardhat init
+```
+
+### Configure Network
+
+```javascript
+// hardhat.config.js
+require("@nomicfoundation/hardhat-toolbox");
+
+module.exports = {
+  solidity: "0.8.20",
+  networks: {
+    radius: {
+      url: "https://rpc.testnet.radiustech.xyz",
+      chainId: 1223953,
+      accounts: [process.env.PRIVATE_KEY]
+    }
+  }
+};
+```
+
+### Deploy Script
+
+```javascript
+// scripts/deploy.js
+const hre = require("hardhat");
+
+async function main() {
+  const Counter = await hre.ethers.getContractFactory("Counter");
+  const counter = await Counter.deploy();
+  await counter.waitForDeployment();
+
+  console.log("Counter deployed to:", await counter.getAddress());
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+```
+
+```bash
+PRIVATE_KEY=0x... npx hardhat run scripts/deploy.js --network radius
+```
+
+## Verify Deployment
+
+After deployment, verify your contract is accessible:
+
+```bash
+# Check contract code exists
+cast code 0xYourContractAddress --rpc-url https://rpc.testnet.radiustech.xyz
+
+# Call a view function
+cast call 0xYourContractAddress "count()" --rpc-url https://rpc.testnet.radiustech.xyz
+```
+
+## Interact with Deployed Contracts
+
+### Using cast (Foundry)
+
+```bash
+# Read state
+cast call 0xContractAddress "count()" \
+  --rpc-url https://rpc.testnet.radiustech.xyz
+
+# Write state
+cast send 0xContractAddress "increment()" \
+  --rpc-url https://rpc.testnet.radiustech.xyz \
+  --private-key $PRIVATE_KEY
+```
+
+### Using ethers.js
+
+```javascript
+import { ethers } from "ethers";
+
+const provider = new ethers.JsonRpcProvider(
+  "https://rpc.testnet.radiustech.xyz"
+);
+const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+
+const abi = ["function count() view returns (uint256)", "function increment()"];
+const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, wallet);
+
+// Read
+const count = await contract.count();
+console.log("Count:", count);
+
+// Write
+const tx = await contract.increment();
+await tx.wait();
+```
+
+## ERC-20 Token Deployment
+
+Deploy a standard ERC-20 token:
+
+```solidity
+// src/Token.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract Token is ERC20 {
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) {
+        _mint(msg.sender, 1_000_000 * 10**decimals());
+    }
+}
+```
+
+Install OpenZeppelin:
+```bash
+forge install OpenZeppelin/openzeppelin-contracts
+```
+
+Deploy:
+```bash
+forge create src/Token.sol:Token \
+  --rpc-url https://rpc.testnet.radiustech.xyz \
+  --private-key $PRIVATE_KEY \
+  --constructor-args "My Token" "MTK"
+```
+
+## Gas and Fees
+
+Radius uses stablecoin fees instead of native gas:
+
+- **Fee token**: SBC
+- **Gas price**: Returns `0x0` from RPC (fees calculated differently)
+- **Gas limit**: Set reasonable limits; transactions have a maximum cap
+
+```bash
+# Check fee token balance
+cast call 0xF966020a30946A64B39E2e243049036367590858 \
+  "balanceOf(address)" 0xYourAddress \
+  --rpc-url https://rpc.testnet.radiustech.xyz
+```
+
+## Deployment Checklist
+
+1. **Get testnet funds** from the [faucet](https://testnet.radiustech.xyz/testnet/faucet)
+2. **Verify SBC balance** for fee payment
+3. **Compile contracts** with Solidity 0.8.x
+4. **Test locally** using Foundry or Hardhat
+5. **Deploy** using the RPC endpoint
+6. **Verify** the contract code is deployed
+7. **Test interactions** on testnet
+
+## Troubleshooting
+
+### Transaction Fails Immediately
+
+Check that your account has SBC tokens for fees:
+
+```bash
+cast call 0xF966020a30946A64B39E2e243049036367590858 \
+  "balanceOf(address)" 0xYourAddress \
+  --rpc-url https://rpc.testnet.radiustech.xyz
+```
+
+### Contract Not Found After Deploy
+
+Radius has immediate finality. If the transaction succeeded, the contract exists. Verify with:
+
+```bash
+cast code 0xContractAddress --rpc-url https://rpc.testnet.radiustech.xyz
+```
+
+### Gas Estimation Issues
+
+If gas estimation fails, try setting an explicit gas limit:
+
+```bash
+forge create src/Contract.sol:Contract \
+  --rpc-url https://rpc.testnet.radiustech.xyz \
+  --private-key $PRIVATE_KEY \
+  --gas-limit 3000000
+```
+
+## Further Reading
+
+- [EVM Compatibility](/differentiators/designed-for-internet-of-tomorrow) - Differences from Ethereum
+- [JSON-RPC API](/developer-resources/json-rpc-api) - API reference
+- [Faucet](https://testnet.radiustech.xyz/testnet/faucet) - Get testnet tokens

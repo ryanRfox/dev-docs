@@ -1,0 +1,807 @@
+# JSON-RPC API Reference
+
+Radius exposes a JSON-RPC 2.0 API that is compatible with standard Ethereum tooling. All methods are available over HTTP and WebSocket connections.
+
+## Network Configuration
+
+| Network | RPC Endpoint | Chain ID |
+|---------|--------------|----------|
+| Testnet | `https://rpc.testnet.radiustech.xyz` | `1223953` |
+
+## Quick Start
+
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'
+```
+
+Response:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "0x12ad11"
+}
+```
+
+---
+
+## eth_* Methods
+
+Standard Ethereum JSON-RPC methods for account queries, transactions, and state access.
+
+### eth_chainId
+
+Returns the chain ID of the network.
+
+**Parameters:** None
+
+**Returns:** `string` - The chain ID as a hex string
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'
+```
+
+```json
+{"jsonrpc":"2.0","id":1,"result":"0x12ad11"}
+```
+
+---
+
+### eth_blockNumber
+
+Returns the current block number.
+
+**Parameters:** None
+
+**Returns:** `string` - The current block number as a hex string
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'
+```
+
+---
+
+### eth_getBalance
+
+Returns the balance of an address.
+
+:::info
+On Radius, fees are paid in stablecoins (SBC) rather than a native gas token. This method returns your actual native balance plus the maximum native token you could receive by converting your SBC through the turnstile. This supports wallets that check balance before allowing transactions.
+:::
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| address | `string` | The address to query (20 bytes, hex encoded) |
+| block | `string` | Block number or tag (`latest`, `earliest`, `pending`) |
+
+**Returns:** `string` - The balance in wei as a hex string
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0x0000000000000000000000000000000000000000","latest"],"id":1}'
+```
+
+---
+
+### eth_getTransactionCount
+
+Returns the number of transactions sent from an address (the nonce).
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| address | `string` | The address to query |
+| block | `string` | Block number or tag (`latest`, `earliest`, `pending`) |
+
+**Returns:** `string` - The transaction count as a hex string
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18","latest"],"id":1}'
+```
+
+---
+
+### eth_sendRawTransaction
+
+Submits a signed transaction to the network.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| data | `string` | The signed transaction data (RLP encoded, hex) |
+
+**Returns:** `string` - The transaction hash (32 bytes, hex encoded)
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_sendRawTransaction","params":["0x02f8..."],"id":1}'
+```
+
+---
+
+### eth_call
+
+Executes a call without creating a transaction (dry run).
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| transaction | `object` | Transaction call object |
+| block | `string` | Block number or tag (optional) |
+
+Transaction call object:
+| Field | Type | Description |
+|-------|------|-------------|
+| from | `string` | Sender address (optional) |
+| to | `string` | Contract address |
+| data | `string` | Encoded function call |
+| value | `string` | Value to send (optional) |
+| gas | `string` | Gas limit (optional) |
+
+**Returns:** `string` - The return value of the executed contract call
+
+**Example:**
+```bash
+# Query SBC token name
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc":"2.0",
+    "method":"eth_call",
+    "params":[{
+      "to":"0xF966020a30946A64B39E2e243049036367590858",
+      "data":"0x06fdde03"
+    },"latest"],
+    "id":1
+  }'
+```
+
+---
+
+### eth_estimateGas
+
+Estimates the gas required for a transaction.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| transaction | `object` | Transaction call object (same as eth_call) |
+
+**Returns:** `string` - Estimated gas as a hex string
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc":"2.0",
+    "method":"eth_estimateGas",
+    "params":[{
+      "from":"0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18",
+      "to":"0xF966020a30946A64B39E2e243049036367590858",
+      "data":"0xa9059cbb..."
+    }],
+    "id":1
+  }'
+```
+
+---
+
+### eth_gasPrice
+
+Returns the current gas price.
+
+:::info
+On Radius, this returns `0x0` because fees are paid in stablecoins rather than via gas price bidding.
+:::
+
+**Parameters:** None
+
+**Returns:** `string` - Gas price in wei as a hex string
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":1}'
+```
+
+```json
+{"jsonrpc":"2.0","id":1,"result":"0x0"}
+```
+
+---
+
+### eth_getCode
+
+Returns the bytecode at a given address.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| address | `string` | Contract address |
+| block | `string` | Block number or tag (optional) |
+
+**Returns:** `string` - The bytecode at the address
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_getCode","params":["0xF966020a30946A64B39E2e243049036367590858","latest"],"id":1}'
+```
+
+---
+
+### eth_getStorageAt
+
+Returns the value of a storage slot at a given address.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| address | `string` | Contract address |
+| position | `string` | Storage slot position (hex) |
+| block | `string` | Block number or tag (optional) |
+
+**Returns:** `string` - The storage value (32 bytes, hex)
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_getStorageAt","params":["0xF966020a30946A64B39E2e243049036367590858","0x0","latest"],"id":1}'
+```
+
+---
+
+### eth_getTransactionByHash
+
+Returns transaction details by hash.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| hash | `string` | Transaction hash (32 bytes, hex) |
+
+**Returns:** `object | null` - Transaction object or null if not found
+
+Transaction object fields:
+| Field | Type | Description |
+|-------|------|-------------|
+| hash | `string` | Transaction hash |
+| blockHash | `string` | Block hash |
+| blockNumber | `string` | Block number |
+| from | `string` | Sender address |
+| to | `string` | Recipient address |
+| value | `string` | Value transferred |
+| input | `string` | Transaction data |
+| nonce | `string` | Sender nonce |
+| gas | `string` | Gas limit |
+| type | `string` | Transaction type |
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_getTransactionByHash","params":["0x..."],"id":1}'
+```
+
+---
+
+### eth_getTransactionReceipt
+
+Returns the receipt of a transaction.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| hash | `string` | Transaction hash (32 bytes, hex) |
+
+**Returns:** `object | null` - Receipt object or null if not found
+
+Receipt object fields:
+| Field | Type | Description |
+|-------|------|-------------|
+| transactionHash | `string` | Transaction hash |
+| blockHash | `string` | Block hash |
+| blockNumber | `string` | Block number |
+| from | `string` | Sender address |
+| to | `string` | Recipient address |
+| status | `string` | `0x1` for success, `0x0` for failure |
+| gasUsed | `string` | Gas used |
+| logs | `array` | Array of log objects |
+| contractAddress | `string` | Created contract address (if deployment) |
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_getTransactionReceipt","params":["0x..."],"id":1}'
+```
+
+---
+
+### eth_getLogs
+
+Returns logs matching a filter.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| filter | `object` | Filter object |
+
+Filter object:
+| Field | Type | Description |
+|-------|------|-------------|
+| fromBlock | `string` | Start block (optional) |
+| toBlock | `string` | End block (optional) |
+| address | `string | array` | Contract address(es) |
+| topics | `array` | Topic filters |
+
+**Returns:** `array` - Array of log objects
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc":"2.0",
+    "method":"eth_getLogs",
+    "params":[{
+      "address":"0xF966020a30946A64B39E2e243049036367590858",
+      "fromBlock":"0x0",
+      "toBlock":"latest"
+    }],
+    "id":1
+  }'
+```
+
+---
+
+### eth_getBlockByNumber
+
+Returns block information by block number.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| block | `string` | Block number or tag |
+| full | `boolean` | If true, returns full transaction objects |
+
+**Returns:** `object` - Block object
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["latest",false],"id":1}'
+```
+
+---
+
+### eth_getBlockByHash
+
+Returns block information by block hash.
+
+:::info
+This is pseudo-supported. Radius does not index blocks by hash in the traditional sense.
+:::
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| hash | `string` | Block hash |
+| full | `boolean` | If true, returns full transaction objects |
+
+**Returns:** `object` - Block object
+
+---
+
+### eth_accounts
+
+Returns the list of accounts managed by the node.
+
+:::info
+Radius does not manage accounts. This method always returns an empty array.
+:::
+
+**Parameters:** None
+
+**Returns:** `array` - Empty array `[]`
+
+---
+
+### eth_maxPriorityFeePerGas
+
+Returns the suggested priority fee.
+
+:::info
+Returns `0x0` because Radius does not use priority fee bidding for transaction inclusion.
+:::
+
+**Parameters:** None
+
+**Returns:** `string` - Priority fee (always `0x0`)
+
+---
+
+### eth_feeHistory
+
+Returns historical fee data.
+
+:::info
+Pseudo-supported. Radius uses stablecoin fees rather than dynamic gas pricing.
+:::
+
+**Parameters:** See Ethereum JSON-RPC specification
+
+**Returns:** `object` - Fee history object
+
+---
+
+### eth_mining
+
+Returns whether the node is actively mining.
+
+**Parameters:** None
+
+**Returns:** `boolean` - Always returns `true` (agents are always accepting transactions)
+
+---
+
+### eth_syncing
+
+Returns the sync status.
+
+**Parameters:** None
+
+**Returns:** `boolean` - Always returns `false` (no syncing in Radius architecture)
+
+---
+
+### eth_hashrate
+
+Returns the current hashrate.
+
+**Parameters:** None
+
+**Returns:** `string` - Always returns `0x0` (Radius does not use proof-of-work)
+
+---
+
+### eth_createAccessList
+
+Creates an access list for a transaction.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| transaction | `object` | Transaction call object |
+| block | `string` | Block number or tag (optional) |
+
+**Returns:** `object` - Access list result with `accessList` and `gasUsed`
+
+---
+
+### eth_subscribe
+
+Creates a subscription for real-time log events (WebSocket only).
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| type | `string` | Subscription type (e.g., `logs`) |
+| filter | `object` | Filter object |
+
+**Returns:** `string` - Subscription ID
+
+---
+
+### eth_uninstallFilter
+
+Uninstalls a filter.
+
+:::info
+Radius does not persist filters. This method always returns `true`.
+:::
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| filterId | `string` | Filter ID |
+
+**Returns:** `boolean` - Always `true`
+
+---
+
+## web3_* Methods
+
+Web3 utility methods.
+
+### web3_clientVersion
+
+Returns the client version string.
+
+**Parameters:** None
+
+**Returns:** `string` - Client version
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":1}'
+```
+
+```json
+{"jsonrpc":"2.0","id":1,"result":"0.1.0"}
+```
+
+---
+
+### web3_sha3
+
+Returns the Keccak-256 hash of the given data.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| data | `string` | Data to hash (hex encoded) |
+
+**Returns:** `string` - Keccak-256 hash (32 bytes, hex)
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"web3_sha3","params":["0x68656c6c6f"],"id":1}'
+```
+
+---
+
+## net_* Methods
+
+Network information methods.
+
+### net_version
+
+Returns the network ID.
+
+**Parameters:** None
+
+**Returns:** `string` - Network ID (same as chain ID: `1223953`)
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"net_version","params":[],"id":1}'
+```
+
+```json
+{"jsonrpc":"2.0","id":1,"result":"1223953"}
+```
+
+---
+
+### net_listening
+
+Returns whether the node is listening for peers.
+
+**Parameters:** None
+
+**Returns:** `boolean` - Always `false` (Radius does not use peer-to-peer networking)
+
+---
+
+### net_peerCount
+
+Returns the number of connected peers.
+
+**Parameters:** None
+
+**Returns:** `string` - Always `0x0` (Radius does not use peer-to-peer networking)
+
+---
+
+## dash_* Methods
+
+Radius Dashboard methods for monitoring and analytics.
+
+### dash_globalGasUsage
+
+Returns the total gas usage across the system.
+
+**Parameters:** None
+
+**Returns:** `number` - Total gas usage as a floating-point number
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"dash_globalGasUsage","params":[],"id":1}'
+```
+
+---
+
+### dash_globalTps
+
+Returns the current transactions per second across the system.
+
+**Parameters:** None
+
+**Returns:** `number` - TPS as a floating-point number
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"dash_globalTps","params":[],"id":1}'
+```
+
+```json
+{"jsonrpc":"2.0","id":1,"result":26.486095339407825}
+```
+
+---
+
+### dash_latestTransactions
+
+Returns the most recent transactions.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| count | `number` | Number of transactions to return |
+
+**Returns:** `array` - Array of compact transaction objects
+
+Transaction object:
+| Field | Type | Description |
+|-------|------|-------------|
+| hash | `string` | Transaction hash |
+| from | `string` | Sender address |
+| to | `string` | Recipient address |
+| value | `string` | Value transferred |
+| ts | `string` | Timestamp |
+| success | `number` | Status (1 = success) |
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"dash_latestTransactions","params":[10],"id":1}'
+```
+
+---
+
+### dash_findTransactionsByAddress
+
+Returns transactions involving a specific address.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| address | `string` | Address to query |
+
+**Returns:** `array` - Array of compact transaction objects
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"dash_findTransactionsByAddress","params":["0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18"],"id":1}'
+```
+
+---
+
+## rad_* Methods
+
+Radius-specific debugging and utility methods.
+
+### rad_decodeKey
+
+Monitors the broker for key operations and returns the matching raw key for a given hashed key.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| key | `string` | Hashed key to decode |
+
+**Returns:** `string` - The decoded raw key
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"rad_decodeKey","params":["0x..."],"id":1}'
+```
+
+---
+
+## trace_* Methods
+
+Transaction tracing methods (Parity-compatible).
+
+### trace_call
+
+Executes a call and returns detailed trace information.
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| call | `object` | Transaction call object |
+| traceTypes | `array` | Types of traces to return (`trace`, `vmTrace`, `stateDiff`) |
+| blockId | `string` | Block number or tag (optional) |
+| stateOverrides | `object` | State overrides (optional) |
+| blockOverrides | `object` | Block overrides (optional) |
+
+**Returns:** `object` - Trace results object
+
+**Example:**
+```bash
+curl -X POST https://rpc.testnet.radiustech.xyz \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc":"2.0",
+    "method":"trace_call",
+    "params":[
+      {"to":"0xF966020a30946A64B39E2e243049036367590858","data":"0x06fdde03"},
+      ["trace"],
+      "latest"
+    ],
+    "id":1
+  }'
+```
+
+---
+
+## Error Codes
+
+Radius uses standard JSON-RPC 2.0 error codes:
+
+| Code | Message | Description |
+|------|---------|-------------|
+| -32700 | Parse error | Invalid JSON |
+| -32600 | Invalid request | Invalid request object |
+| -32601 | Method not found | Method does not exist |
+| -32602 | Invalid params | Invalid method parameters |
+| -32603 | Internal error | Internal JSON-RPC error |
+| 3 | Execution reverted | Contract execution reverted |
+
+---
+
+## Contract Addresses
+
+### Testnet
+
+| Contract | Address |
+|----------|---------|
+| SBC (Fee Token) | `0xF966020a30946A64B39E2e243049036367590858` |
+| EntryPoint v0.7 | `0x9b443e4bd122444852B52331f851a000164Cc83F` |
+| SimpleAccountFactory | `0x4DEbDe0Be05E51432D9afAf61D84F7F0fEA63495` |
+
+---
+
+## Resources
+
+- [Faucet](https://testnet.radiustech.xyz/testnet/faucet) - Get testnet SBC tokens
+- [EVM Compatibility](/differentiators/designed-for-internet-of-tomorrow) - Differences from standard Ethereum

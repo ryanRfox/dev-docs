@@ -1,0 +1,311 @@
+---
+title: Account Setup
+description: Create and configure signers for development on Radius. Learn key generation, importing, and security best practices.
+---
+
+# Account Setup
+
+Create and configure signers for development on Radius. Learn how to generate new wallets, import existing keys, and manage credentials securely.
+
+## Creating a Signer
+
+The Radius SDK uses signers to authorize transactions. A signer holds a private key and can sign transactions on behalf of an account.
+
+### Generate a New Wallet
+
+Use viem to generate a random wallet, then import it into the Radius SDK:
+
+```typescript
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
+
+// Generate a random private key
+const privateKey = generatePrivateKey();
+const account = privateKeyToAccount(privateKey);
+
+console.log('Address:', account.address);
+console.log('Private Key:', privateKey);
+```
+
+Save these values securely—you'll need them to create a signer in the SDK.
+
+### Key Generation and Address Derivation
+
+When you generate a wallet:
+
+- **Private Key** - A 32-byte secret (256-bit) that signs transactions and proves account ownership
+- **Address** - Derived from your public key using Keccak-256 hashing. Always starts with `0x` followed by 40 hex characters
+- **Public Key** - Derived from the private key and used to verify signatures
+
+The address is deterministic—the same private key always produces the same address.
+
+### Import Into Radius SDK
+
+```typescript
+import {
+  createRadiusClient,
+  createPrivateKeySigner,
+  radiusTestnet,
+} from '@radiustechsystems/sdk';
+
+// Connect to Radius testnet
+const client = createRadiusClient({ chain: radiusTestnet });
+
+// Create signer from private key
+const signer = createPrivateKeySigner(
+  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+  radiusTestnet.id
+);
+
+// Get your account address
+console.log('Signer address:', signer.address);
+
+// Check your balance
+const balance = await client.getBalance(signer.address);
+console.log('Balance:', balance);
+```
+
+## Importing Existing Keys
+
+Already have a private key? Import it directly.
+
+### From an Existing Wallet
+
+If you have an existing Ethereum wallet (MetaMask, Ledger, Trezor, etc.), export the private key and import it:
+
+```typescript
+import {
+  createRadiusClient,
+  createPrivateKeySigner,
+  radiusTestnet,
+} from '@radiustechsystems/sdk';
+
+// Connect to Radius
+const client = createRadiusClient({ chain: radiusTestnet });
+
+// Use your existing private key
+const signer = createPrivateKeySigner(
+  '0x...your-private-key...' as `0x${string}`,
+  radiusTestnet.id
+);
+
+console.log('Imported address:', signer.address);
+```
+
+### From Environment Variables
+
+Never hardcode private keys. Always use environment variables:
+
+```typescript
+import {
+  createRadiusClient,
+  createPrivateKeySigner,
+  radiusTestnet,
+} from '@radiustechsystems/sdk';
+
+// Load from environment variable
+const privateKey = process.env.RADIUS_PRIVATE_KEY as `0x${string}`;
+if (!privateKey) {
+  throw new Error('RADIUS_PRIVATE_KEY environment variable not set');
+}
+
+const client = createRadiusClient({ chain: radiusTestnet });
+const signer = createPrivateKeySigner(privateKey, radiusTestnet.id);
+
+console.log('Address:', signer.address);
+```
+
+Then set it before running your application:
+
+```bash
+export RADIUS_PRIVATE_KEY=0x...
+npx tsx your-script.ts
+```
+
+## Development vs. Production
+
+Keep your keys separate across environments. Use different signers for development and production.
+
+### Development Setup
+
+For local development and testnet, use test accounts:
+
+```
+# .env.development
+RADIUS_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+```
+
+```typescript
+import {
+  createRadiusClient,
+  createPrivateKeySigner,
+  radiusTestnet,
+} from '@radiustechsystems/sdk';
+
+const client = createRadiusClient({ chain: radiusTestnet });
+const signer = createPrivateKeySigner(
+  process.env.RADIUS_PRIVATE_KEY as `0x${string}`,
+  radiusTestnet.id
+);
+```
+
+### Production Setup
+
+For production, use a separate key and environment:
+
+```bash
+# .env.production (never commit this!)
+RADIUS_PRIVATE_KEY=0x...production-key...
+```
+
+Key differences:
+- Different private key (never reuse test keys in production)
+- Securely managed key storage (environment variables, secrets manager, or hardware wallet)
+
+## Key Management Best Practices
+
+### Do
+
+- **Use environment variables** - Never hardcode keys in source code
+- **Rotate keys periodically** - Generate new keys and transfer funds regularly
+- **Separate environments** - Different keys for dev, testnet, and production
+- **Use version control safely** - Add `.env` files to `.gitignore`
+- **Store backups securely** - Keep encrypted backups of important keys
+- **Monitor accounts** - Watch for unexpected transactions or balance changes
+- **Use hardware wallets for production** - Consider Ledger, Trezor, or similar for mainnet
+
+### Don't
+
+- **Commit keys to Git** - Even in private repositories, this is a critical security risk
+- **Share keys** - Keep private keys absolutely private, even with teammates
+- **Use the same key everywhere** - Compromise of one environment shouldn't affect others
+- **Log private keys** - Never print, log, or display keys
+- **Store in plain text** - Use secure vaults or hardware wallets
+- **Reuse test keys in production** - Always generate new keys for production
+
+### Secure Storage Example
+
+```typescript
+// Bad - Don't do this
+const privateKey = '0x...'; // Hardcoded!
+
+// Bad - Don't do this
+console.log(privateKey); // Logged!
+
+// Good - Use environment variables
+const privateKey = process.env.RADIUS_PRIVATE_KEY as `0x${string}`;
+
+// Good - Use a secrets manager
+const privateKey = await secretsManager.getSecret('radius-production-key');
+```
+
+## Test Accounts
+
+Anvil provides well-known test accounts with predictable private keys. **Account 0 is funded on Radius testnet.**
+
+### Account 0 (Funded on Testnet)
+
+```
+Address:    0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+Private Key: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+```
+
+```typescript
+import {
+  createRadiusClient,
+  createPrivateKeySigner,
+  radiusTestnet,
+} from '@radiustechsystems/sdk';
+
+const client = createRadiusClient({ chain: radiusTestnet });
+
+// Use the funded test account
+const signer = createPrivateKeySigner(
+  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+  radiusTestnet.id
+);
+
+const balance = await client.getBalance(signer.address);
+console.log('Test account balance:', balance); // Should have funds
+```
+
+### Account 1
+
+```
+Address:    0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+Private Key: 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
+```
+
+These accounts are derived from Anvil's mnemonic and are well-known for testing. They should only be used in development and testnet environments.
+
+### Funding Your Account
+
+If you're using a different account, get testnet tokens from the faucet:
+
+1. Visit [https://testnet.radiustech.xyz/testnet/faucet](https://testnet.radiustech.xyz/testnet/faucet)
+2. Enter your account address
+3. Confirm the transaction
+4. Tokens appear in your account within minutes
+
+```typescript
+// Check your balance after funding
+const balance = await client.getBalance(signer.address);
+console.log('New balance:', balance);
+```
+
+## Verify Account Setup
+
+Once you've created or imported a signer, verify it's working:
+
+```typescript
+import {
+  createRadiusClient,
+  createPrivateKeySigner,
+  radiusTestnet,
+  RadiusError,
+} from '@radiustechsystems/sdk';
+
+async function verifyAccount(privateKey: `0x${string}`) {
+  const client = createRadiusClient({ chain: radiusTestnet });
+  const signer = createPrivateKeySigner(privateKey, radiusTestnet.id);
+
+  // Get address
+  console.log('Address:', signer.address);
+
+  // Check balance
+  try {
+    const balance = await client.getBalance(signer.address);
+    console.log('Balance:', balance);
+    console.log('Account is properly configured!');
+  } catch (error) {
+    if (error instanceof RadiusError) {
+      console.error('Error:', error.shortMessage);
+    } else {
+      throw error;
+    }
+  }
+}
+
+// Test it
+verifyAccount(process.env.RADIUS_PRIVATE_KEY as `0x${string}`);
+```
+
+## Signer Interface
+
+The signer provides methods for signing transactions and messages:
+
+```typescript
+interface RadiusSigner {
+  address: Address;
+  chainId: number;
+  signTransaction(tx: TransactionRequest): Promise<Hex>;
+  signMessage(message: string | Uint8Array): Promise<Hex>;
+}
+```
+
+## Next Steps
+
+Now that your signer is set up:
+
+- **[Quick Start](/build-deploy/quick-start-first-payment)** — Send your first transaction
+- **[Wallet Integration](/build-deploy/wallet-integration)** — Connect browser wallets like MetaMask
+- **[Smart Contract Deployment](/build-deploy/smart-contract-deploy)** — Deploy your first contract
