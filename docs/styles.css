@@ -1,18 +1,1 @@
-/* Hide the "Ask in ChatGPT" button - Vocs AI chat feature */
-/* The button is actually an <a> tag, not a button element */
-/* Using multiple selectors and !important to ensure it's hidden */
-.vocs_AiCtaDropdown,
-.vocs_AiCtaDropdown *,
-a[href*="chatgpt.com"],
-button[aria-label*="Ask in ChatGPT"],
-button[title*="Ask in ChatGPT"],
-div.vocs_Outline > div.vocs_AiCtaDropdown {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  height: 0 !important;
-  width: 0 !important;
-  overflow: hidden !important;
-  position: absolute !important;
-  pointer-events: none !important;
-}
+/* AI CTA (Ask in ChatGPT) disabled via vocs.config.ts: aiCta: false */

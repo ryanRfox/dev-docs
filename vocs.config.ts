@@ -70,7 +70,7 @@ export default defineConfig({
   theme: {
     accentColor: '#0066cc',
   },
-  aiChat: false,
+  aiCta: false,
   socials: [
     {
       icon: 'github',
