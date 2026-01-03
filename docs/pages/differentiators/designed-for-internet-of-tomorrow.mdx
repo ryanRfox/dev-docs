@@ -1,11 +1,11 @@
 ---
 title: Designed for the Internet of Tomorrow
-description: EVM compatibility with Osaka hardfork support - deploy Solidity contracts, use Foundry and Hardhat, connect with ethers.js and viem.
+description: EVM compatibility with Osaka hardfork support - deploy Solidity contracts, use Foundry, connect with ethers.js and viem.
 ---
 
 # Designed for the Internet of Tomorrow
 
-Radius is EVM-compatible — your Solidity contracts deploy without modification, your Hardhat scripts work, your ethers.js code works. But Radius isn't just another EVM chain. This page covers what works, what's different, and why those differences matter for the future of internet payments.
+Radius is EVM-compatible — your Solidity contracts deploy without modification using Foundry, your ethers.js code works, your viem integration works. But Radius isn't just another EVM chain. This page covers what works, what's different, and why those differences matter for the future of internet payments.
 
 ## What Works
 
@@ -15,7 +15,6 @@ Your existing Ethereum development workflow transfers directly to Radius:
 |----------------|--------|
 | **Solidity** | Fully supported (Osaka hardfork) |
 | **Foundry** | Compatible |
-| **Hardhat** | Compatible |
 | **ethers.js** | Compatible |
 | **viem** | Compatible |
 | **OpenZeppelin** | Compatible |
@@ -24,13 +23,9 @@ Your existing Ethereum development workflow transfers directly to Radius:
 ### Deploy Existing Contracts
 
 ```bash
-# Foundry
 forge create src/MyContract.sol:MyContract \
   --rpc-url https://rpc.testnet.radiustech.xyz \
   --private-key $PRIVATE_KEY
-
-# Hardhat
-npx hardhat run scripts/deploy.js --network radius
 ```
 
 ### Connect Your Application
@@ -82,7 +77,7 @@ Radius provides smart contract execution without traditional blockchain overhead
 ### What You Keep
 
 - **Same execution model**: Your Solidity runs on the EVM
-- **Same tooling**: Foundry, Hardhat, and debugging tools work
+- **Same tooling**: Foundry and debugging tools work
 - **Same addresses**: 20-byte addresses, same derivation
 - **Same ABI**: Standard contract interfaces
 - **Same events**: Logs work identically

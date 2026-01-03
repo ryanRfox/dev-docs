@@ -6,7 +6,7 @@ Deploy Solidity smart contracts to Radius using standard Ethereum tooling. No mo
 
 - A funded wallet (get testnet tokens from the [faucet](https://testnet.radiustech.xyz/testnet/faucet))
 - An RPC key (included in faucet distribution)
-- Foundry or Hardhat installed
+- Foundry installed
 
 ## Network Configuration
 
@@ -106,59 +106,6 @@ forge script script/Deploy.s.sol \
   --rpc-url https://rpc.testnet.radiustech.xyz \
   --private-key $PRIVATE_KEY \
   --broadcast
-```
-
-## Deploy with Hardhat
-
-### Installation
-
-```bash
-mkdir my-project && cd my-project
-npm init -y
-npm install --save-dev hardhat @nomicfoundation/hardhat-toolbox
-npx hardhat init
-```
-
-### Configure Network
-
-```javascript
-// hardhat.config.js
-require("@nomicfoundation/hardhat-toolbox");
-
-module.exports = {
-  solidity: "0.8.20",
-  networks: {
-    radius: {
-      url: "https://rpc.testnet.radiustech.xyz",
-      chainId: 1223953,
-      accounts: [process.env.PRIVATE_KEY]
-    }
-  }
-};
-```
-
-### Deploy Script
-
-```javascript
-// scripts/deploy.js
-const hre = require("hardhat");
-
-async function main() {
-  const Counter = await hre.ethers.getContractFactory("Counter");
-  const counter = await Counter.deploy();
-  await counter.waitForDeployment();
-
-  console.log("Counter deployed to:", await counter.getAddress());
-}
-
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
-```
-
-```bash
-PRIVATE_KEY=0x... npx hardhat run scripts/deploy.js --network radius
 ```
 
 ## Verify Deployment
@@ -261,7 +208,7 @@ cast call 0xF966020a30946A64B39E2e243049036367590858 \
 1. **Get testnet funds** from the [faucet](https://testnet.radiustech.xyz/testnet/faucet)
 2. **Verify SBC balance** for fee payment
 3. **Compile contracts** with Solidity 0.8.x
-4. **Test locally** using Foundry or Hardhat
+4. **Test locally** using Foundry
 5. **Deploy** using the RPC endpoint
 6. **Verify** the contract code is deployed
 7. **Test interactions** on testnet
