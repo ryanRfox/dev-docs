@@ -1,0 +1,14 @@
+/* Hide the "Ask in ChatGPT" button - Vocs AI chat feature */
+button[aria-label*="Ask in ChatGPT"],
+button[title*="Ask in ChatGPT"],
+button[class*="ai"],
+button[class*="chat"],
+/* Target by position or context if button is in header */
+header button:last-of-type {
+  display: none !important;
+}
+
+/* Also hide the dropdown that appears when clicked */
+[role="dialog"] {
+  display: none !important;
+}
