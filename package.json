@@ -9,15 +9,16 @@
     "preview": "vocs preview"
   },
   "dependencies": {
-    "vocs": "^1.4.0",
     "react": "^19.1.4",
-    "react-dom": "^19.2.3"
+    "react-dom": "^19.2.3",
+    "vocs": "^1.4.0"
   },
   "devDependencies": {
+    "playwright": "^1.57.0",
     "typescript": "^5.9.3"
   },
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=24.0.0",
     "pnpm": ">=9"
   }
 }
