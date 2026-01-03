@@ -49,7 +49,7 @@ export default defineConfig({
         { text: 'Quick Start: First Payment', link: '/build-deploy/quick-start-first-payment' },
         { text: 'Account Setup', link: '/build-deploy/account-setup' },
         { text: 'Wallet Integration', link: '/build-deploy/wallet-integration' },
-        { text: 'Smart Contract Deployment', link: '/build-deploy/smart-contract-deployment' },
+        { text: 'Smart Contract Deployment', link: '/build-deploy/smart-contract-deploy' },
       ],
     },
   ],
