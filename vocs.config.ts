@@ -3,7 +3,7 @@ import { defineConfig } from 'vocs'
 export default defineConfig({
   title: 'Radius Documentation',
   description: 'Developer documentation for the Radius Network - Stablecoin-native EVM with sub-second finality.',
-  logo: {
+  logoUrl: {
     light: '/logo-light.svg',
     dark: '/logo-dark.svg',
   },
@@ -71,6 +71,11 @@ export default defineConfig({
     accentColor: '#0066cc',
   },
   aiCta: false,
+  // Suppress vanilla-extract CSS cache errors in dev mode (fixed in Vocs v1.4.1+)
+  // TODO: Remove after upgrading to Vocs v1.4.1+
+  vite: {
+    logLevel: 'warn',
+  },
   socials: [
     {
       icon: 'github',
