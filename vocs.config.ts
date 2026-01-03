@@ -1,6 +1,7 @@
 import { defineConfig } from 'vocs'
 
 export default defineConfig({
+  basePath: '/dev-docs',
   title: 'Radius Documentation',
   description: 'Developer documentation for the Radius Network - Stablecoin-native EVM with sub-second finality.',
   logoUrl: {
