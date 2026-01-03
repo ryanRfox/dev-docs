@@ -1,20 +1,20 @@
 {
   "name": "radius-dev-docs",
   "version": "1.0.0",
-  "description": "Radius Developer Documentation powered by Vocs",
+  "description": "Radius Developer Documentation",
   "type": "module",
   "scripts": {
     "dev": "vocs dev",
-    "build": "NODE_ENV=production vocs build",
+    "build": "vocs build",
     "preview": "vocs preview"
   },
   "dependencies": {
-    "@vocs/vocs": "latest",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "vocs": "^1.4.0",
+    "react": "^19.1.4",
+    "react-dom": "^19.2.3"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=20.0.0",

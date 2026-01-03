@@ -34,15 +34,34 @@ pnpm run build
 pnpm run preview
 ```
 
-## Documentation Structure
+## Project Structure
+
+This documentation site uses [Vocs](https://vocs.dev), a React-based static site generator with file-based routing.
+
+### Directory Layout
 
 ```
-docs/
-├── differentiators/       # Why Radius is different
-├── use-cases/            # Practical payment patterns
-├── developer-resources/  # API docs, SDKs, contract addresses
-└── build-deploy/         # Getting started guides
+radius-dev-docs/
+├── docs/                      # Documentation root
+│   ├── pages/                # All documentation pages (file-based routing)
+│   │   ├── index.mdx        # Homepage (/)
+│   │   ├── build-deploy/    # Getting started guides
+│   │   ├── developer-resources/  # API docs, SDKs, contract addresses
+│   │   ├── differentiators/ # Why Radius is different
+│   │   └── use-cases/       # Practical payment patterns
+│   ├── public/              # Static assets (logos, images, favicon)
+│   ├── footer.tsx           # Custom footer component
+│   └── components/          # Custom React components (optional)
+├── vocs.config.ts           # Vocs configuration
+└── package.json
 ```
+
+### File-Based Routing
+
+Vocs uses file-based routing from the `docs/pages/` directory:
+- `docs/pages/index.mdx` → `/`
+- `docs/pages/build-deploy/quick-start-first-payment.mdx` → `/build-deploy/quick-start-first-payment`
+- `docs/pages/developer-resources/sdks-typescript.mdx` → `/developer-resources/sdks-typescript`
 
 ## Content
 
@@ -50,9 +69,25 @@ docs/
 - **MDX format** with React component support
 - **Vocs framework** for fast, zero-config documentation sites
 
+## Adding New Pages
+
+To add new documentation:
+
+1. Create a new `.mdx` file in `docs/pages/` or a subdirectory
+2. Add frontmatter metadata (optional):
+   ```markdown
+   ---
+   title: My Page Title
+   description: Brief description for SEO
+   ---
+   ```
+3. Write your content in Markdown or MDX format
+4. Update `vocs.config.ts` sidebar if you want the page in navigation
+5. Run `pnpm dev` to preview locally
+
 ## Contributing
 
-Documentation is versioned with the main Radius codebase. Changes should be submitted via pull request.
+Documentation is versioned with the main Radius codebase. Changes should be submitted via pull request to [radiustechsystems/dev-docs](https://github.com/radiustechsystems/dev-docs).
 
 ## Migration
 

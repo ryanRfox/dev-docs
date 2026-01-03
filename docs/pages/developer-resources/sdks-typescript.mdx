@@ -3,7 +3,6 @@ title: SDKs (TypeScript)
 description: Install and use the Radius TypeScript SDK for building on Radius
 ---
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 The Radius TypeScript SDK provides a complete toolkit for interacting with the Radius network, built on [viem](https://viem.sh) for maximum compatibility with the Ethereum ecosystem.
 
@@ -11,28 +10,21 @@ The Radius TypeScript SDK provides a complete toolkit for interacting with the R
 
 Get started by installing the SDK.
 
-<Tabs defaultValue="pnpm" className="w-full">
-  <TabsList>
-    <TabsTrigger value="pnpm">pnpm</TabsTrigger>
-    <TabsTrigger value="npm">npm</TabsTrigger>
-    <TabsTrigger value="yarn">yarn</TabsTrigger>
-  </TabsList>
-  <TabsContent value="pnpm">
-```bash
+:::code-group
+
+```bash [pnpm]
 pnpm add @radiustechsystems/sdk
 ```
-  </TabsContent>
-  <TabsContent value="npm">
-```bash
+
+```bash [npm]
 npm install @radiustechsystems/sdk
 ```
-  </TabsContent>
-  <TabsContent value="yarn">
-```bash
+
+```bash [yarn]
 yarn add @radiustechsystems/sdk
 ```
-  </TabsContent>
-</Tabs>
+
+:::
 
 **Requirements:**
 - Node.js >= 18

@@ -7,6 +7,20 @@ export default defineConfig({
     light: '/logo-light.svg',
     dark: '/logo-dark.svg',
   },
+  topNav: [
+    { text: 'Documentation', link: '/differentiators/architected-for-scale' },
+    { text: 'Use Cases', link: '/use-cases/real-time-api-metering' },
+    { text: 'Developer Resources', link: '/developer-resources/sdks-typescript' },
+    { text: 'Build & Deploy', link: '/build-deploy/quick-start-first-payment' },
+  ],
+  ogImageUrl: {
+    '/': '/og-image.png',
+    '/**': 'https://docs.radiustech.xyz/api/og?title=%title&description=%description',
+  },
+  editLink: {
+    pattern: 'https://github.com/radiustechsystems/dev-docs/edit/main/docs/pages/:path',
+    text: 'Edit this page on GitHub',
+  },
   sidebar: [
     {
       text: 'Introduction',
