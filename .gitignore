@@ -12,6 +12,7 @@ build/
 
 # Claude Code working directory
 .claude/
+CLAUDE.md
 
 # Environment variables
 .env
