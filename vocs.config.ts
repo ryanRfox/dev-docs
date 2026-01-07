@@ -23,13 +23,7 @@ export default defineConfig({
     text: 'Edit this page on GitHub',
   },
   sidebar: [
-    {
-      text: 'Introduction',
-      collapsed: false,
-      items: [
-        { text: 'Welcome', link: '/' },
-      ],
-    },
+    { text: 'Home', link: '/' },
     {
       text: 'Differentiators',
       collapsed: false,
@@ -85,6 +79,10 @@ export default defineConfig({
     {
       icon: 'discord',
       link: 'https://discord.gg/radiustech',
+    },
+    {
+      icon: 'x',
+      link: 'https://x.com/radiustech_xyz',
     },
   ],
 })
