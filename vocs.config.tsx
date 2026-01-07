@@ -233,6 +233,21 @@ export default defineConfig({
           dark: '#93C5FD',
         },
       },
+      // Font weights optimized for Instrument Sans
+      fontWeight: {
+        regular: '400',
+        medium: '500',
+        semibold: '600',
+      },
+      // Line heights optimized for readability
+      lineHeight: {
+        heading: '1.4em',
+        paragraph: '1.8em',
+        listItem: '1.6em',
+        sidebarItem: '1.4em',
+        code: '1.75em',
+        outlineItem: '1em',
+      },
     },
   },
   aiCta: false,
