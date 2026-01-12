@@ -3,6 +3,8 @@ title: Real-time API Metering
 description: Charge per API call with instant settlement using Radius.
 ---
 
+import { RADIUS_CONFIG } from '../../site.config';
+
 # Real-time API Metering
 
 ## Problem Statement
@@ -77,7 +79,7 @@ const serverPrivateKey = process.env.SERVER_PRIVATE_KEY as `0x${string}`;
 const serverSigner = createPrivateKeySigner(serverPrivateKey, radiusTestnet.id);
 
 // Configuration
-const COST_PER_REQUEST = parseEther('0.001'); // 0.001 SBC per call
+const COST_PER_REQUEST = parseEther(RADIUS_CONFIG.TRANSACTION_COST_SBC); // From site.config.ts
 
 const app = express();
 app.use(express.json());
@@ -210,7 +212,7 @@ async function callMetereedAPI(query: string): Promise<void> {
   const paymentHash = await radiusClient.send(
     clientSigner,
     serverAddress,
-    parseEther('0.001')
+    parseEther(RADIUS_CONFIG.TRANSACTION_COST_SBC)
   );
 
   console.log(`Payment sent: ${paymentHash}`);
@@ -325,7 +327,7 @@ In production, consider:
 
 ```typescript
 // Fixed rate per request
-const COST_PER_REQUEST = parseEther('0.001');
+const COST_PER_REQUEST = parseEther(RADIUS_CONFIG.TRANSACTION_COST_SBC);
 
 // Tiered pricing based on request type
 const PRICING = {

@@ -3,6 +3,9 @@ title: Stablecoin-Native Fees
 description: Pay gas fees in stablecoins on Radius Network—a seamless way to handle transaction costs without requiring native tokens.
 ---
 
+import { RADIUS_CONFIG } from '../../site.config';
+import { Callout } from 'vocs/components';
+
 # Stablecoin-Native Fees
 
 ## Overview
@@ -63,12 +66,16 @@ Stablecoin-Native Fees have a transparent, minimal cost structure:
 
 | Metric | Value |
 |--------|-------|
-| **Cost per transfer** | 0.0001¢ ($0.000001) |
+| **Cost per transfer** | $0.000001 |
 | **Transfers per $1** | 1,000,000 |
-| **Cost per 1,000 txns** | ~$0.001 |
+| **Cost per 1,000 txns** | ~$0.00001 |
 | **Minimum threshold** | 0.001 SBC |
 
 This pricing structure makes Stablecoin-Native Fees practical for all transaction volumes, from small payments to high-frequency trading.
+
+<Callout type="info">
+These values are defined in `site.config.ts` and used consistently across all documentation.
+</Callout>
 
 ## Example Scenario
 
