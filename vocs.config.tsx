@@ -18,10 +18,6 @@ export default defineConfig({
     '/': '/og-image.png',
     '/**': 'https://docs.radiustech.xyz/api/og?title=%title&description=%description',
   },
-  editLink: {
-    pattern: 'https://github.com/radiustechsystems/dev-docs/edit/main/docs/pages/:path',
-    text: 'Edit this page on GitHub',
-  },
   sidebar: [
     { text: 'Home', link: '/' },
     {
@@ -251,6 +247,8 @@ export default defineConfig({
     },
   },
   aiCta: false,
+  // Disable "Last updated" timestamp on all pages
+  lastUpdated: false,
   // Suppress vanilla-extract CSS cache errors in dev mode (fixed in Vocs v1.4.1+)
   // TODO: Remove after upgrading to Vocs v1.4.1+
   vite: {

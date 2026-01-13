@@ -12,7 +12,7 @@ export default function Footer() {
         <a href="https://x.com/radiustech_xyz">Twitter</a>
       </div>
       <div style={{ fontSize: '0.875rem', color: 'var(--vocs-color_text2)' }}>
-        © {new Date().getFullYear()} Radius Tech Systems. All rights reserved.
+        ©{new Date().getFullYear()} Radius. All Rights Reserved.
       </div>
     </div>
   )
