@@ -80,12 +80,14 @@ export function FeatureCards() {
               target.style.boxShadow = 'none'
             }}
           >
-            <div style={{ fontSize: '2rem', marginBottom: '1rem', display: 'inline-block', width: 'fit-content' }}>
-              {card.icon}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 500, color: 'var(--vocs-color_title)', lineHeight: 1.4, margin: 0 }}>
+                {card.title}
+              </h3>
+              <div style={{ fontSize: '1.75rem', marginLeft: '1rem', flexShrink: 0 }}>
+                {card.icon}
+              </div>
             </div>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 500, marginBottom: '0.75rem', color: 'var(--vocs-color_title)', lineHeight: 1.4, margin: '0 0 0.75rem 0' }}>
-              {card.title}
-            </h3>
             <p style={{ fontSize: '0.875rem', color: 'var(--vocs-color_text2)', lineHeight: 1.6, margin: 0, flexGrow: 1 }}>
               {card.description}
             </p>
