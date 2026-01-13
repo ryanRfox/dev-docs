@@ -174,33 +174,6 @@ pnpm preview
 
 ---
 
-## Known Issues & Workarounds
-
-### Vanilla-Extract CSS Cache Warning
-
-**Symptom:** Dev server logs CSS cache warnings (pages still render correctly)
-```
-Internal server error: No CSS for file: .../vocs/_lib/app/components/HomePage.css.js
-```
-
-**Root Cause:** Race condition in vanilla-extract's CSS compilation in dev mode (cosmetic issue, non-blocking)
-
-**Status:** Upstream fix available in Vocs main branch but not released
-- Fixed in: Vocs commit 06042d9 ("fix: css hmr")
-- Release: Expected in Vocs v1.4.1+ (as of Jan 2026)
-
-**Current Workaround:**
-```typescript
-// vocs.config.ts
-vite: {
-  logLevel: 'warn',  // Suppress CSS cache errors
-}
-```
-
-**Action Item:** Remove this workaround when Vocs v1.4.1+ is released. Monitor: https://github.com/wevm/vocs/releases
-
----
-
 ## Critical Configuration & Notes
 
 ### No Claude Adverts in Commits

@@ -237,11 +237,6 @@ export default defineConfig({
     },
   },
   aiCta: false,
-  // Suppress vanilla-extract CSS cache errors in dev mode (fixed in Vocs v1.4.1+)
-  // TODO: Remove after upgrading to Vocs v1.4.1+
-  vite: {
-    logLevel: 'warn',
-  },
   socials: [
     {
       icon: 'github',

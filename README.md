@@ -101,26 +101,6 @@ To add new documentation:
 4. Update `vocs.config.ts` sidebar if you want the page in navigation
 5. Run `pnpm dev` to preview locally
 
-## Known Issues
-
-### Vanilla Extract CSS Warning (Vocs v1.4.0)
-
-The dev server may occasionally show `No CSS for file: HomePage.css.js` errors. This is a known issue in Vocs v1.4.0 caused by a CSS cache race condition in vanilla-extract's dev mode.
-
-**Status:** Fixed upstream (commit `06042d9`, Jan 1, 2026) - will be in Vocs v1.4.1+
-
-**Impact:** None - pages render correctly, build succeeds
-
-**Workaround:** Error suppressed via `vite.logLevel: 'warn'` in vocs.config.ts
-
-**Action Required:** When Vocs v1.4.1+ is released:
-```bash
-pnpm update vocs --latest
-```
-Then remove the `vite` workaround from `vocs.config.ts`.
-
-**Monitor:** https://github.com/wevm/vocs/releases
-
 ## Contributing
 
 Documentation is versioned with the main Radius codebase. Changes should be submitted via pull request to [radiustechsystems/dev-docs](https://github.com/radiustechsystems/dev-docs).
