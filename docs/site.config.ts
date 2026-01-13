@@ -47,9 +47,9 @@ export const RADIUS_CONFIG = {
   // ============================================================================
   // Pricing & Economics
   // ============================================================================
-  TRANSACTION_COST: '0.00001',
-  TRANSACTION_COST_USD: '$0.00001',
-  TRANSACTION_COST_SBC: '0.00001',
+  TRANSACTION_COST: '0.0001',
+  TRANSACTION_COST_USD: '$0.0001',
+  TRANSACTION_COST_SBC: '0.0001',
 
   COST_PER_TRANSFER: '0.000001',
   COST_PER_TRANSFER_FORMATTED: '$0.000001',

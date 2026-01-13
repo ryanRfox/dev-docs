@@ -22,6 +22,22 @@ pnpm run dev
 
 The documentation will be available at `http://localhost:5173`
 
+#### Clean Rebuild & Dev Server
+
+To completely remove previous build artifacts and start fresh (useful for debugging build issues):
+
+```bash
+pnpm run clean-dev
+```
+
+This script:
+- Removes previous build output (`docs/dist/`)
+- Clears Vite cache
+- Performs a complete rebuild
+- Launches the dev server
+
+**Note:** This is slower than `pnpm run dev` but ensures a completely fresh build state.
+
 ### Build for Production
 
 ```bash
