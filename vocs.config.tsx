@@ -78,6 +78,10 @@ export default defineConfig({
             font-weight: 700 !important;
             letter-spacing: 0 !important;
           }
+          /* Hide "Last updated" timestamp from page footers */
+          .vocs_Footer_lastUpdated {
+            display: none !important;
+          }
         `}</style>
       </>
     )
@@ -247,8 +251,6 @@ export default defineConfig({
     },
   },
   aiCta: false,
-  // Disable "Last updated" timestamp on all pages
-  lastUpdated: false,
   // Suppress vanilla-extract CSS cache errors in dev mode (fixed in Vocs v1.4.1+)
   // TODO: Remove after upgrading to Vocs v1.4.1+
   vite: {
