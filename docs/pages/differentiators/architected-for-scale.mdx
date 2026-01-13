@@ -13,7 +13,7 @@ Radius is architected for scale that matches the internet itself. 2.5 million TP
 |--------|-------|
 | **Throughput** | 2.5M TPS (tested) |
 | **Settlement** | 200ms |
-| **Transaction cost** | $0.001 |
+| **Transaction cost** | $0.0001 |
 | **Finality** | Immediate |
 
 These aren't theoretical limits — they're demonstrated capabilities under load testing.
@@ -26,29 +26,17 @@ Traditional blockchains hit throughput ceilings. Adding more nodes doesn't help 
 
 Radius distributes state across multiple independent shard clusters:
 
-<div style="display: flex; justify-content: center; overflow-x: auto; margin: 1.5rem 0;">
+<div style={{ display: 'flex', justifyContent: 'center', overflowX: 'auto', margin: '1.5rem 0' }}>
 
 ```mermaid
 flowchart TB
-    subgraph Keyspace["Keyspace: 000000 → ffffff"]
-        direction LR
-    end
+    K["Keyspace: 000000 → ffffff"]
 
-    Keyspace --> S0
-    Keyspace --> S1
-    Keyspace --> S2
+    K --> S0 & S1 & S2
 
-    subgraph S0["Shard 0<br/>000000-555554"]
-        R0["3-node Raft cluster"]
-    end
-
-    subgraph S1["Shard 1<br/>555555-aaaaaa"]
-        R1["3-node Raft cluster"]
-    end
-
-    subgraph S2["Shard 2<br/>aaaaaa-ffffff"]
-        R2["3-node Raft cluster"]
-    end
+    S0["Shard 0<br/>000000-555554"]
+    S1["Shard 1<br/>555555-aaaaaa"]
+    S2["Shard 2<br/>aaaaab-ffffff"]
 ```
 
 </div>
@@ -84,7 +72,7 @@ Keys are hashed and distributed across shards via a prefix tree. When the system
 
 Scaling operations happen without interrupting service:
 
-<div style="display: flex; justify-content: center; overflow-x: auto; margin: 1.5rem 0;">
+<div style={{ display: 'flex', justifyContent: 'center', overflowX: 'auto', margin: '1.5rem 0' }}>
 
 ```mermaid
 sequenceDiagram
@@ -113,7 +101,7 @@ sequenceDiagram
 
 Transactions accessing different keys execute simultaneously. No global ordering required:
 
-<div style="display: flex; justify-content: center; overflow-x: auto; margin: 1.5rem 0;">
+<div style={{ display: 'flex', justifyContent: 'center', overflowX: 'auto', margin: '1.5rem 0' }}>
 
 ```mermaid
 flowchart LR
@@ -132,7 +120,7 @@ Only transactions touching the same keys require coordination.
 
 Radius uses a distributed architecture based on [PArSEC](https://dci.mit.edu/s/p.pdf) (Parallel Sharded Transactions with Contracts):
 
-<div style="display: flex; justify-content: center; overflow-x: auto; margin: 1.5rem 0;">
+<div style={{ display: 'flex', justifyContent: 'center', overflowX: 'auto', margin: '1.5rem 0' }}>
 
 ```mermaid
 flowchart TB
@@ -177,7 +165,7 @@ When multiple transactions compete for the same key, Radius uses intelligent bat
 3. **Batching**: Backend executes conflicting transactions sequentially within a single batch
 4. **Efficiency**: One lock acquisition serves the entire batch
 
-<div style="display: flex; justify-content: center; overflow-x: auto; margin: 1.5rem 0;">
+<div style={{ display: 'flex', justifyContent: 'center', overflowX: 'auto', margin: '1.5rem 0' }}>
 
 ```mermaid
 flowchart LR
