@@ -62,28 +62,14 @@ export default defineConfig({
   font: {
     google: 'Instrument Sans',
   },
-  // Custom head for Mona Sans (H1 font) and custom styles
-  // Note: Mona Sans is a GitHub font, using CDN version
+  // Custom head for Mona Sans font (H1 font from design system)
+  // Note: Styles are in docs/styles.css per Vocs best practices
   head() {
     return (
-      <>
-        <link
-          href="https://cdn.jsdelivr.net/npm/@aspect-ux/mona-sans@1.0.1/dist/mona-sans.min.css"
-          rel="stylesheet"
-        />
-        <style>{`
-          /* Mona Sans for H1 headings - matches design system typography */
-          h1, .vocs_H1 {
-            font-family: 'Mona Sans', system-ui, sans-serif !important;
-            font-weight: 700 !important;
-            letter-spacing: 0 !important;
-          }
-          /* Hide "Last updated" timestamp from page footers */
-          .vocs_Footer_lastUpdated {
-            display: none !important;
-          }
-        `}</style>
-      </>
+      <link
+        href="https://cdn.jsdelivr.net/npm/@aspect-ux/mona-sans@1.0.1/dist/mona-sans.min.css"
+        rel="stylesheet"
+      />
     )
   },
   theme: {

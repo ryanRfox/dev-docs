@@ -10,6 +10,20 @@
 
 set -e
 
+# Kill any process running on port 5173
+echo "🔍 Checking for processes on port 5173..."
+PID=$(lsof -ti:5173 2>/dev/null || true)
+if [ -n "$PID" ]; then
+  echo "⚠️  Found process(es) on port 5173: $PID"
+  echo "🔪 Killing process(es)..."
+  kill -9 $PID 2>/dev/null || true
+  sleep 1
+  echo "✓  Port 5173 cleared"
+else
+  echo "✓  Port 5173 is available"
+fi
+echo ""
+
 echo "🧹 Cleaning previous builds..."
 rm -rf docs/dist
 rm -rf node_modules/.vite

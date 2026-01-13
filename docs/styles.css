@@ -1,0 +1,16 @@
+/* Radius Documentation Global Styles
+ * This file follows Vocs best practices for global CSS customization
+ * See: https://vocs.dev/docs/structure#global-styles
+ */
+
+/* Mona Sans for H1 headings - matches design system typography */
+h1, .vocs_H1 {
+  font-family: 'Mona Sans', system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+}
+
+/* Hide "Last updated" timestamp from page footers */
+.vocs_Footer_lastUpdated {
+  display: none !important;
+}
