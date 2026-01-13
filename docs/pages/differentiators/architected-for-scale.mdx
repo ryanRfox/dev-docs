@@ -26,6 +26,8 @@ Traditional blockchains hit throughput ceilings. Adding more nodes doesn't help 
 
 Radius distributes state across multiple independent shard clusters:
 
+<div style="display: flex; justify-content: center; overflow-x: auto; margin: 1.5rem 0;">
+
 ```mermaid
 flowchart TB
     subgraph Keyspace["Keyspace: 000000 → ffffff"]
@@ -48,6 +50,8 @@ flowchart TB
         R2["3-node Raft cluster"]
     end
 ```
+
+</div>
 
 Each shard:
 - Runs as a 3-node Raft cluster (tolerates 1 node failure)
@@ -80,6 +84,8 @@ Keys are hashed and distributed across shards via a prefix tree. When the system
 
 Scaling operations happen without interrupting service:
 
+<div style="display: flex; justify-content: center; overflow-x: auto; margin: 1.5rem 0;">
+
 ```mermaid
 sequenceDiagram
     participant Agent
@@ -101,9 +107,13 @@ sequenceDiagram
     Agent->>OldShard: commit
 ```
 
+</div>
+
 ### Parallel Execution
 
 Transactions accessing different keys execute simultaneously. No global ordering required:
+
+<div style="display: flex; justify-content: center; overflow-x: auto; margin: 1.5rem 0;">
 
 ```mermaid
 flowchart LR
@@ -114,11 +124,15 @@ flowchart LR
     end
 ```
 
+</div>
+
 Only transactions touching the same keys require coordination.
 
 ## The Architecture
 
 Radius uses a distributed architecture based on [PArSEC](https://dci.mit.edu/s/p.pdf) (Parallel Sharded Transactions with Contracts):
+
+<div style="display: flex; justify-content: center; overflow-x: auto; margin: 1.5rem 0;">
 
 ```mermaid
 flowchart TB
@@ -131,6 +145,8 @@ flowchart TB
     S2["Shard 2"]
     SN["Shard N"]
 ```
+
+</div>
 
 ### Why No Blocks?
 
@@ -161,6 +177,8 @@ When multiple transactions compete for the same key, Radius uses intelligent bat
 3. **Batching**: Backend executes conflicting transactions sequentially within a single batch
 4. **Efficiency**: One lock acquisition serves the entire batch
 
+<div style="display: flex; justify-content: center; overflow-x: auto; margin: 1.5rem 0;">
+
 ```mermaid
 flowchart LR
     subgraph Without["Without Batching"]
@@ -177,6 +195,8 @@ flowchart LR
         Lock2 -->|"execute sequentially"| OK["✓ No conflicts"]
     end
 ```
+
+</div>
 
 ## Specialized Shards
 

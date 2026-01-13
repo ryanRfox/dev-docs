@@ -5,7 +5,7 @@ description: EVM compatibility with Osaka hardfork support - deploy Solidity con
 
 # Designed for the Internet of Tomorrow
 
-Radius is EVM-compatible — your Solidity contracts deploy without modification using Foundry, your ethers.js code works, your viem integration works. But Radius isn't just another EVM chain. This page covers what works, what's different, and why those differences matter for the future of internet payments.
+Radius is EVM-compatible — your Solidity contracts deploy without modification using Foundry, your ethers.js code works, your viem integration works. Radius runs Solidity contracts but with fundamentally different economics and architecture. This page covers what works, what's different, and why those differences matter for the future of internet payments.
 
 ## What Works
 
@@ -46,13 +46,9 @@ const client = createPublicClient({
 
 Radius optimizes for payments. This means deliberate differences from standard Ethereum behavior:
 
-### No Gas Auctions
+### Predictable Fees (Not Market-Dependent)
 
-| Ethereum | Radius |
-|----------|--------|
-| Gas prices fluctuate with demand | Fixed $0.001 per transaction |
-| Users bid for block inclusion | No bidding, no MEV |
-| Priority fees for faster inclusion | All transactions process immediately |
+Traditional blockchain fees fluctuate with network demand. Radius charges a fixed $0.001 per transaction—predictable, auditable, and calculable.
 
 ### Stablecoin Fees
 
@@ -70,28 +66,14 @@ Radius optimizes for payments. This means deliberate differences from standard E
 | 12+ confirmations recommended | 0 confirmations needed |
 | Reorgs possible | No reorgs |
 
-## Not a Blockchain
+## Key Differences from Ethereum
 
-Radius provides smart contract execution without traditional blockchain overhead. Here's what that means for your code:
-
-### What You Keep
-
-- **Same execution model**: Your Solidity runs on the EVM
-- **Same tooling**: Foundry and debugging tools work
-- **Same addresses**: 20-byte addresses, same derivation
-- **Same ABI**: Standard contract interfaces
-- **Same events**: Logs work identically
-
-### What Changes
-
-| Concept | Ethereum | Radius |
+| Feature | Ethereum | Radius |
 |---------|----------|--------|
-| **Blocks** | Real, sequential | Synthetic (for compatibility) |
-| **Block confirmations** | Required for safety | Not needed |
-| **Pending transactions** | Mempool visible | No mempool |
-| **Native balance** | ETH balance | Returns augmented balance* |
-
-*`eth_getBalance` returns your actual balance plus the maximum native token you could receive by converting your SBC through the turnstile. This supports wallets that check balance before allowing transactions.
+| **Fee model** | Market-based (ETH bids) | Fixed $0.00001 (stablecoins) |
+| **Settlement time** | 12+ minutes | Instant (milliseconds) |
+| **Failed txs** | Charge gas even if reverted | Charge only on success |
+| **Required token** | Must hold ETH | Optional (stablecoins work) |
 
 ### Practical Implications
 
@@ -117,49 +99,25 @@ require(address(this).balance > 0);
 require(IERC20(feeToken).balanceOf(address(this)) > 0);
 ```
 
-## The Security Model
+## How Radius Ensures Data Integrity
 
-Traditional blockchains achieve security through mining (PoW) or staking (PoS). Radius uses a different model optimized for payment infrastructure:
+Radius uses operator trust + replication rather than decentralized consensus:
+- 3-node clusters provide fault tolerance (operator nodes replicate data)
+- Cryptographic signing prevents tampering
+- Deterministic execution ensures consistency
 
-### Raft Consensus
-
-Each shard cluster runs Raft consensus:
-- 3 nodes per shard (tolerates 1 failure)
-- Leader election for writes
-- Log replication for durability
-- No mining, no staking, no validators
-
-### What This Means
-
-| Property | How Radius Achieves It |
-|----------|----------------------|
-| **Durability** | Raft log replication across 3 nodes |
-| **Consistency** | Strong consistency within each shard |
-| **Availability** | Automatic leader failover |
-| **Integrity** | Cryptographic transaction signing |
-
-### Trade-offs
-
-Radius is designed for payment infrastructure where:
-- Operators are known entities (not anonymous miners)
-- Speed and cost matter more than maximum decentralization
-- Immediate finality is required
-
-This is different from public blockchain security models. Choose based on your requirements.
+This trade-off (known operators for instant finality) is appropriate for payment infrastructure.
 
 ## Future-Proofing
 
 Radius is built for where the internet is going, not where it's been.
 
-### AI Agents
+### Real-Time Autonomous Payments
 
-Agents need to pay for things autonomously — APIs, data, compute. This requires:
-
-- **Immediate finality**: Agents can't wait for block confirmations
-- **Sub-cent fees**: Micro-transactions must be economically viable
-- **Stablecoin payments**: Agents shouldn't manage volatile assets
-
-Radius enables all three. See [Agentic Payments (x402)](#TODO) for implementation patterns.
+AI agents need to pay for services (APIs, data, compute) instantly. Traditional payment processors require 30+ day settlement. Radius provides:
+- **Instant settlement** — Agent gets confirmation in milliseconds
+- **Sub-cent costs** — Enables per-request pricing
+- **Stablecoin support** — Agents don't need volatile assets
 
 ### Micropayments
 
@@ -169,7 +127,7 @@ When transactions cost $0.001, new business models become viable:
 - **Content micropayments**: Pay per article, not subscription
 - **Streaming payments**: Pay by the second for compute
 
-Traditional blockchains can't economically support these patterns. Radius can.
+Traditional payment processors (Stripe, PayPal) can't economically support these patterns. Radius can.
 
 ### EIP Support (Osaka)
 
