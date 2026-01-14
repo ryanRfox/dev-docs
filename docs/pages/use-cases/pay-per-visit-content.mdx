@@ -109,7 +109,7 @@ export function ContentPaywall({
     <div className="paywall">
       <h2>{title}</h2>
       <p>
-        This premium content costs <strong>${amount} SBC</strong> to unlock.
+        This premium content costs <strong>{amount} SBC</strong> to unlock.
       </p>
       <p>
         One-time payment. No subscription. Instant access.
@@ -120,7 +120,7 @@ export function ContentPaywall({
         disabled={isPaying || isConfirming}
         className="unlock-button"
       >
-        {isPaying || isConfirming ? 'Processing...' : `Unlock for $${amount}`}
+        {isPaying || isConfirming ? 'Processing...' : `Unlock for ${amount} SBC`}
       </button>
 
       {isPending && <p className="status">Awaiting wallet confirmation...</p>}
@@ -219,10 +219,10 @@ Offer different content at different prices:
 
 ```typescript
 const contentTiers = {
-  article: '0.05', // $0.05 per article
-  video: '0.25', // $0.25 per video
-  research: '1.00', // $1.00 per research paper
-  masterclass: '5.00', // $5.00 per masterclass
+  article: '0.05', // 0.05 SBC per article
+  video: '0.25', // 0.25 SBC per video
+  research: '1.00', // 1.00 SBC per research paper
+  masterclass: '5.00', // 5.00 SBC per masterclass
 };
 
 export function ContentLibrary() {
@@ -251,7 +251,7 @@ export function ContentLibrary() {
 
 ### For Users
 
-- **Lower barrier than subscriptions** — Pay $0.10 for one article instead of $15/month
+- **Lower barrier than subscriptions** — Pay 0.10 SBC for one article instead of 15 USDC/month
 - **No tracking required** — Stablecoins provide value; ads and trackers don't
 - **Global access** — Pay with Radius in any country; instant settlement
 - **Instant access** — Content unlocks immediately after payment confirmation
@@ -271,7 +271,7 @@ export function ContentLibrary() {
 - **Works globally** — Stablecoins work in any country; currency conversion handled on-chain
 
 <Callout type="success">
-With Radius, a creator earning $0.10 per article only needs 100 readers per day to generate $1,000/month. That's achievable for most niche content creators.
+With Radius, a creator earning 0.10 SBC per article only needs 100 readers per day to generate 1000 SBC/month. That's achievable for most niche content creators.
 </Callout>
 
 ## Use Cases
@@ -363,12 +363,12 @@ Always test payments on Radius Testnet first. Use the faucet to get free test SB
 
 - **Batch settlements** — Collect multiple payments, settle once daily to save costs
 - **Tiered content** — Use content length/quality to justify different price points
-- **Bundle offers** — Sell article packs ("10 articles for $0.50") to increase AOV
+- **Bundle offers** — Sell article packs ("10 articles for 0.50 SBC") to increase AOV
 - **Incentivize loyalty** — Offer discounts to frequent readers or newsletter subscribers
 - **Track conversion** — Monitor which price points convert best for different content types
 
 <Callout type="info">
-Radius transactions cost nearly nothing to process. A $0.10 article payment costs less than $0.01 in fees, so almost all revenue goes to the creator.
+Radius transactions cost nearly nothing to process. A 0.10 SBC article payment costs less than 0.01 SBC in fees, so almost all revenue goes to the creator.
 </Callout>
 
 ## What's Next

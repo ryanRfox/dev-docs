@@ -9,7 +9,7 @@ import { RADIUS_CONFIG } from '../../site.config';
 
 ## Problem Statement
 
-Traditional API billing relies on monthly invoices with credit card processing—a system plagued with friction. API providers wait 30+ days to see revenue, pay 2.9% + $0.30 per transaction in payment processor fees, and face chargebacks and payment failures. Users in developing regions often can't pay by credit card at all. This broken model leaves money on the table and locks out global users.
+Traditional API billing relies on monthly invoices with credit card processing—a system plagued with friction. API providers wait 30+ days to see revenue, pay 2.9% + 0.30 USD per transaction in payment processor fees, and face chargebacks and payment failures. Users in developing regions often can't pay by credit card at all. This broken model leaves money on the table and locks out global users.
 
 Radius solves this with **real-time, per-request billing**. Each API call includes payment that settles instantly on-chain. No credit card fees. No chargebacks. No intermediaries. Global access for anyone with a wallet.
 
@@ -101,7 +101,7 @@ async function verifyPayment(
       receipt.status !== 'success' ||
       !receipt.to ||
       receipt.to.toLowerCase() !== expectedRecipient.toLowerCase() ||
-      receipt.gasUsed < expectedAmount // Simplified: check gas used as proxy for value
+      receipt.gasUsed < expectedAmount // Check gas used as proxy for value
     ) {
       return null;
     }
@@ -369,11 +369,11 @@ payments.push({
 
 | Feature | Traditional | Radius |
 |---------|-----------|--------|
-| **Payment fees** | 2.9% + $0.30 | ~$0.000001 per transfer |
+| **Payment fees** | 2.9% + 0.30 USD | ~0.000001 SBC per transfer |
 | **Settlement time** | 30+ days | Seconds |
 | **Chargebacks** | Common, costly | Impossible (on-chain) |
 | **Global access** | Credit card required | Wallet + SBC only |
-| **Minimum transaction** | $5–10 | $0.0001 |
+| **Minimum transaction** | 5–10 USD | 0.0001 SBC |
 | **Revenue control** | Intermediary takes a cut | You control 100% |
 
 ## Use Cases
