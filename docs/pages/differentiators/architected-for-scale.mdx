@@ -36,11 +36,23 @@ flowchart TB
     S1["Shard 1 Keyspace:<br/>0x55...55 → 0xaa...aa"]
     S2["Shard 2 Keyspace:<br/>0xaa...ab → 0xff...ff"]
 
-    S1 --> N1 & N11 & N12
+    S0 --> CS0["Cluster 0"]
 
-    N10["Node 1.0"]
-    N10["Node 1.1"]
-    N10["Node 1.2"]
+    subgraph C1["Cluster 1"]
+        direction LR
+        N1["Node 1.0"] ~~~ N11["Node 1.1"] ~~~ N12["Node 1.2"]
+    end
+    S1 --> C1
+
+    S2 --> CS2["Cluster 2"]
+
+    classDef shard fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    classDef cluster fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    classDef node fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+
+    class K,S0,S1,S2 shard
+    class CS0,C1,CS2 cluster
+    class N1,N11,N12 node
 ```
 
 </div>
@@ -110,9 +122,9 @@ Transactions accessing different keys execute simultaneously. No global ordering
 ```mermaid
 flowchart LR
     subgraph Parallel["Execute in parallel"]
-        A["Transaction A: writes key X"] --> S0["Shard 0"]
-        B["Transaction B: writes key Y"] --> S1["Shard 1"]
-        C["Transaction C: writes key Z"] --> S2["Shard 2"]
+        A["Transaction A:<br/>writes key 0x00...00"] --> S0["Shard 0"]
+        B["Transaction B:<br/>writes key 0x55...55"] --> S1["Shard 1"]
+        C["Transaction C:<br/>writes key 0x56...00"] --> S1
     end
 ```
 
