@@ -15,7 +15,7 @@ Use this section for fast lookups:
 | Present or future tense? | **Present**: "returns" not "will return" |
 | Oxford comma? | **Yes**: "shards, transactions, and fees" |
 | Numbers under 10? | **Spell out**: "three shards" (except with units: "5 USDC") |
-| Currency format? | **Token + amount**: "100 USDC" or "10 SBC" (no $ symbol) |
+| Currency format? | **Amount + token**: "0.0001 USD" or "100 USDC" (no $ symbol) |
 | Contractions? | **Yes**: "don't," "can't," "you're" (avoid awkward ones like "it'll") |
 | Latin abbreviations? | **No**: Use "for example" not "e.g.", "that is" not "i.e." |
 | Heading style? | **Sentence case**: "Send a transaction" not "Send a Transaction" |
@@ -180,7 +180,8 @@ When showing complete examples, use these Radius Testnet values:
 ```
 RPC URL: https://rpc.testnet.radiustech.xyz
 Chain ID: 1223953
-Fee Token (SBC): 0xF966020a30946A64B39E2e243049036367590858
+Native Token: USD (displayed as "USD" in wallets and UI)
+Fee Token Contract: 0xF966020a30946A64B39E2e243049036367590858
 ```
 
 ### Language & Tooling Standards
@@ -209,11 +210,15 @@ Fee Token (SBC): 0xF966020a30946A64B39E2e243049036367590858
 
 | Term | Usage |
 |------|-------|
-| SBC | Always caps: "pay fees in SBC" |
-| USDC | Always caps: "transfer 100 USDC" |
+| USD | Native token symbol: "transactions cost 0.0001 USD" |
+| USDC | External stablecoin: "transfer 100 USDC" |
 | stablecoin-native | Hyphenate as adjective: "stablecoin-native fees" |
-| fee token | Two words: "SBC is the fee token" |
+| fee token | Two words: "USD is the fee token" |
 | Turnstile | Capitalize (proper noun): "the Turnstile mechanism" |
+
+**Currency Format Rule**: Always use "amount + token" format without $ symbol:
+- **Correct**: "0.0001 USD", "100 USDC", "5 USD per request"
+- **Wrong**: "$0.0001", "0.0001 SBC", "$5 per request"
 
 ### Addresses & Transactions
 
