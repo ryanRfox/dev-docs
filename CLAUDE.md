@@ -1,87 +1,77 @@
 # Radius Developer Documentation - Claude Code Guide
 
+## Quick Start for Claude
+
+**Before writing or editing any documentation, read the style guide:**
+```
+docs/RADIUS-STYLE-GUIDE.md
+```
+
+**Key rules to remember:**
+- Native token is **USD** (not SBC, not $)
+- Currency format: `0.0001 USD` or `100 USDC` (no $ symbol)
+- Sentence case headings: "Send a transaction" not "Send a Transaction"
+- Active voice, present tense: "returns" not "will return"
+- Foundry only (no Hardhat), viem only (no ethers.js), pnpm only
+- Max 3 callouts per page
+
+**Essential commands:**
+```bash
+pnpm dev      # Development server at http://localhost:5173
+pnpm build    # Production build to docs/dist/
+pnpm preview  # Preview production build
+```
+
+---
+
 ## Project Overview
 
-This repository contains the developer documentation for **Radius**, a stablecoin-native EVM network designed for payment infrastructure.
+Developer documentation for **Radius**, a stablecoin-native EVM network for payment infrastructure.
 
-**Key Characteristics:**
-- **Sub-second finality** - Immediate transaction settlement
-- **Linear scalability** - 2.5M TPS via sharding
-- **Stablecoin-native fees** - Pay transactions in USDC/SBC instead of ETH
-- **EVM compatible** - Deploy existing Solidity contracts unchanged
-- **Osaka hardfork support** - Latest Ethereum features available
+| Feature | Value |
+|---------|-------|
+| Finality | Sub-second |
+| Throughput | 2.5M TPS via sharding |
+| Fee Token | USD (stablecoin-native) |
+| Compatibility | EVM compatible (Osaka hardfork) |
+| Live URL | https://ryanrfox.github.io/dev-docs/ |
 
-**Current Status:** Production-ready Vocs documentation site with 14 MDX pages deployed to GitHub Pages.
-
----
-
-## Framework Stack
-
-This project is built on three core frameworks:
-
-### 1. **Vocs v1.4.0** - Documentation Site Generator
-- **Purpose:** React/Vite-based static documentation generator
-- **Key Features:**
-  - File-based routing (content in `docs/pages/`)
-  - Component framework (use `import { Callout } from 'vocs/components'`)
-  - Built-in navbar, sidebar, footer customization
-  - SEO-friendly with frontmatter support
-  - Code groups (tabbed code examples via `:::code-group`)
-- **Config File:** `vocs.config.ts` (comprehensive configuration)
-- **Official Reference:** https://github.com/wevm/vocs
-
-### 2. **Viem** - Ethereum Library
-- **Purpose:** Type-safe Ethereum library for SDK and examples
-- **Why Chosen:** Modern TypeScript-first design, tree-shakeable, smaller bundle
-- **Usage:** Core of Radius SDK, wallet integration examples, RPC interaction
-- **Key Exports Used:** `parseEther`, `formatEther`, `createPublicClient`, `createWalletClient`
-- **Official Reference:** https://github.com/wevm/viem
-
-### 3. **WAGMI** - React Hooks for Wallets
-- **Purpose:** React hooks for wallet connections and contract interaction
-- **Usage:** Referenced in examples (not currently a project dependency)
-- **Key Hooks:** `useAccount`, `useWriteContract`, `useWaitForTransactionReceipt`
-- **Official Reference:** https://github.com/wevm/wagmi
+**Current State:** 14 MDX pages deployed via GitHub Pages. Style guide compliance at 93%+ average.
 
 ---
 
-## Reference Documentation & Models
+## Critical Gotchas
 
-This project models its documentation structure and best practices after **Tempo**, an AI agents payment platform.
+These issues have caused problems before. Don't repeat them.
 
-### Primary Reference
-- **Tempo Docs:** https://docs.tempo.xyz/
-- **Tempo GitHub:** https://github.com/tempoxyz/tempo/tree/main/docs/pages
+### Playwright Dependency
+Playwright must stay in devDependencies even though it's not directly used.
+- **Why:** @mdx-js/rollup requires Playwright browsers in CI
+- **Do NOT remove** — CI builds will fail
 
-### Additional References
-- **x402 Protocol:** https://github.com/coinbase/x402 (AI agent payment patterns)
+### Logo Configuration
+```typescript
+// CORRECT - logos render
+logoUrl: { light: '/logo-light.svg', dark: '/logo-dark.svg' }
 
-### Critical Rule: No Web Scraping
-Always clone reference repositories locally to `/tmp/` rather than web scraping. This ensures accurate, version-specific information.
-
----
-
-## Local Repository Cloning Convention
-
-When exploring frameworks and references, clone to `/tmp/` for local scanning:
-
-```bash
-# Framework and documentation references
-/tmp/vocs           # Vocs framework source (official examples)
-/tmp/tempo          # Tempo documentation structure model
-/tmp/viem           # Viem library source
-/tmp/wagmi          # WAGMI hooks library
-/tmp/x402           # x402 agent payment patterns
+// WRONG - silently ignored, no logos
+logo: { light: '/logo-light.svg', dark: '/logo-dark.svg' }
 ```
 
-**Clone Commands:**
-```bash
-git clone https://github.com/wevm/vocs /tmp/vocs
-git clone https://github.com/tempoxyz/tempo /tmp/tempo
-git clone https://github.com/wevm/viem /tmp/viem
-git clone https://github.com/wevm/wagmi /tmp/wagmi
-git clone https://github.com/coinbase/x402 /tmp/x402
+### basePath for GitHub Pages
+```typescript
+// vocs.config.ts - required for sub-path deployment
+basePath: '/dev-docs',
 ```
+
+### Vocs Subtitle Pattern
+Use bracket syntax to avoid unwanted H2 borders:
+```mdx
+# Page Title [Subtitle text here]
+
+## First Section
+```
+This keeps subtitle inside `<header>`, preventing double borders.
 
 ---
 
@@ -90,296 +80,108 @@ git clone https://github.com/coinbase/x402 /tmp/x402
 ```
 radius-dev-docs/
 ├── docs/
-│   ├── pages/                          # File-based routing (Vocs convention)
-│   │   ├── index.mdx                   # Homepage
-│   │   ├── differentiators/            # 3 pages: architecture, EVM compatibility, stablecoins
-│   │   ├── use-cases/                  # 3 pages: API metering, pay-per-visit, streaming
-│   │   ├── developer-resources/        # 3 pages: SDK, JSON-RPC, contract addresses
-│   │   └── build-deploy/               # 4 pages: quick-start, accounts, wallets, smart contracts
-│   ├── public/                         # Static assets
-│   │   ├── logo-light.svg
-│   │   └── logo-dark.svg
-│   ├── footer.tsx                      # Custom footer component
-│   └── dist/                           # Build output (docs/dist/)
-├── .claude/                            # Claude working directory
-│   ├── Vocs_Implementation_Plan.md     # Original restructuring plan
-│   ├── vocs-best-practices-audit/      # Multi-model QA findings
-│   └── vanilla-extract-css-error/      # CSS issue investigation
-├── .github/workflows/deploy-pages.yml  # GitHub Actions deployment
-├── vocs.config.ts                      # Primary configuration file
-├── package.json                        # pnpm dependencies
-├── pnpm-lock.yaml                      # Dependency lock file
-├── README.md                           # Project documentation
-├── CLAUDE.md                           # This file
-└── .gitignore                          # Git excludes
-
-Total Content: 14 production documentation pages
+│   ├── pages/                    # All MDX content (14 pages)
+│   │   ├── index.mdx
+│   │   ├── differentiators/      # 3 pages
+│   │   ├── use-cases/            # 3 pages
+│   │   ├── developer-resources/  # 3 pages
+│   │   └── build-deploy/         # 4 pages
+│   ├── public/                   # Static assets (logos)
+│   ├── RADIUS-STYLE-GUIDE.md     # Authoritative style reference
+│   └── footer.tsx                # Custom footer component
+├── .claude/                      # Claude working directory
+│   └── *.md                      # Task handoffs, plans, investigations
+├── vocs.config.ts                # Site configuration
+├── CLAUDE.md                     # This file
+└── package.json                  # pnpm dependencies
 ```
 
 ---
 
-## Documentation Conventions
+## Tech Stack
 
-### Naming & Organization
-- **File-based routing:** All pages must be in `docs/pages/` (Vocs convention)
-- **Subdirectories:** Organize by topic (differentiators/, use-cases/, build-deploy/, etc.)
-- **Frontmatter:** Always include title and description for SEO
+| Tool | Purpose | Reference |
+|------|---------|-----------|
+| **Vocs v1.4.0** | Documentation generator | https://github.com/wevm/vocs |
+| **viem** | Ethereum library (all examples) | https://github.com/wevm/viem |
+| **wagmi** | React wallet hooks | https://github.com/wevm/wagmi |
+| **Foundry** | Smart contract tooling | https://book.getfoundry.sh |
+| **pnpm** | Package manager | — |
 
-### Code Examples
-- **Language:** TypeScript by default
-- **Package Manager:** Show pnpm commands (pnpm is project standard)
-- **Copy-paste Ready:** All examples should be directly executable
-- **Foundry Focus:** Show only Foundry tooling (Hardhat removed from all docs)
+**Do NOT use:** Hardhat, ethers.js, npm, yarn
 
-### Components & Syntax
-- **Callouts:** `import { Callout } from 'vocs/components'` for highlights
-- **Code Tabs:** Use `:::code-group` syntax for tabbed code examples
-- **Links:**
-  - Internal: Use relative paths (`/differentiators/architected-for-scale`)
-  - External: Use full URLs (`https://docs.tempo.xyz/`)
-
-### Example Frontmatter
-```yaml
 ---
-title: Page Title
-description: Clear, concise description for SEO and social sharing
----
+
+## Network Configuration
+
+```
+Chain ID:    1223953
+RPC URL:     https://rpc.testnet.radiustech.xyz
+Native Token: USD
+Fee Contract: 0xF966020a30946A64B39E2e243049036367590858
+Faucet:      https://testnet.radiustech.xyz/testnet/faucet
 ```
 
-### Vocs Subtitle Pattern (CRITICAL)
-
-Vocs has a native subtitle syntax that places subtitle text INSIDE the `<header>` element. This prevents unwanted horizontal borders between H1 and H2 headings.
-
-**Syntax:**
-```mdx
-# Page Title [Subtitle text goes here]
-```
-
-**How it works:**
-- The `remarkSubheading` plugin (in Vocs source at `src/vite/plugins/remark/subheading.ts`) extracts bracketed text from H1 headings
-- Creates `<div role="doc-subtitle">` inside the `<header>` element
-- This keeps the subtitle as part of the header structure, avoiding the H2 border-top trigger
-
-**Why this matters:**
-- Vocs applies `border-top` to H2 elements via the selector `:not(header) + h2:not(:only-child)`
-- If a paragraph sits between H1 and H2, the H2 gets a border (two lines appear)
-- Using bracket syntax keeps everything in the header, so only one border appears (on H2)
-
-**Pattern to follow:**
-```mdx
----
-title: Page Title
-description: Description for SEO
 ---
 
-# Page Title [Brief subtitle or tagline describing the page purpose]
+## Environment Requirements
 
-## First Section
-
-Content...
-```
-
-**Pages that DON'T need the pattern:**
-- Pages where H1 is immediately followed by H2 (no subtitle paragraph)
-- Example: `# Real-time API Metering` → `## Problem Statement`
-
-**Reference:** Discovered by analyzing Tempo docs (`https://docs.tempo.xyz/`) which uses this pattern, confirmed by reading Vocs source code.
-
----
-
-## Build & Development
-
-### Essential Commands
-
-```bash
-# Development server (auto-reload at http://localhost:5173)
-pnpm dev
-
-# Production build (outputs to docs/dist/)
-pnpm build
-
-# Preview production build locally
-pnpm preview
-```
-
-### Environment Requirements
-- **Node.js:** >= 24.0.0 (CI requirement; v22+ works locally)
+- **Node.js:** >= 24.0.0 (CI requires v24; v22+ works locally)
 - **pnpm:** >= 9.0.0
-- **Playwright:** Required as devDependency (CI builds use @mdx-js/rollup which invokes Playwright)
-
-### Build Time
-- Development: ~2-3 seconds (with HMR)
-- Production: ~1 minute (includes prerendering)
+- **Playwright:** In devDependencies (CI requirement)
 
 ---
 
-## Critical Configuration & Notes
+## Deployment
 
-### No Claude Adverts in Commits
-Global instruction enforced: NEVER include Claude attribution in git commits
-- See: `~/.claude/CLAUDE.md`
-- Applies to all instances and subagents
-- Commit messages must contain ONLY factual descriptions
+Automatic via GitHub Actions on push to `main`.
 
-### Playwright Dependency
-Playwright (`^1.57.0`) must be in devDependencies despite not being directly used
-- **Why:** @mdx-js/rollup (Vocs dependency) requires Playwright browsers in CI
-- **CI Step:** `pnpm exec playwright install` runs before `pnpm build`
-- **Do NOT remove** even though local builds work without it
+1. Push to main
+2. CI runs: Node v24, pnpm install, Playwright install, pnpm build
+3. `docs/dist/` uploaded as artifact
+4. GitHub Pages deploys (~2 min total)
 
-### Logo Configuration
-- **Correct:** `logoUrl: { light: '...', dark: '...' }` (Vocs official API)
-- **Wrong:** `logo: { ... }` (silently ignored, logos won't render)
-- This is a Vocs v1.4.0 API requirement
+---
 
-### basePath for GitHub Pages
-```typescript
-// vocs.config.ts
-basePath: '/dev-docs',  // Required for sub-path deployment
+## Working Conventions
+
+### For Framework Research
+Clone to `/tmp/` rather than web scraping:
+```bash
+git clone https://github.com/wevm/vocs /tmp/vocs
+git clone https://github.com/tempoxyz/tempo /tmp/tempo
 ```
 
-### AI Chat Disabled
-```typescript
-// vocs.config.ts
-aiCta: false,  // Disables "Ask in ChatGPT" button
-```
+### For Multi-Step Tasks
+Use `.claude/` directory for:
+- Implementation plans
+- Task handoffs between sessions
+- Investigation notes
+- QA audit reports
+
+### For QA
+Use multi-model escalation for critical issues:
+1. **Haiku** — Broad coverage, quick analysis
+2. **Sonnet** — Deeper investigation
+3. **Opus** — Critical production issues
 
 ---
 
-## GitHub Pages Deployment
+## Content Pages (14 total)
 
-### Current Setup
-- **Live URL:** https://ryanrfox.github.io/dev-docs/
-- **Deployment Method:** GitHub Actions automatic
-- **Workflow File:** `.github/workflows/deploy-pages.yml`
-
-### Deployment Process
-1. **Trigger:** Push to main branch
-2. **Build:** Node v24, pnpm v9, Playwright browsers installed
-3. **Output:** `docs/dist/` uploaded as artifact
-4. **Deploy:** GitHub Pages automatically deploys artifact
-5. **Time:** ~1-2 minutes total
-
-### Environment Configuration
-- **Chain ID:** 1223953 (Radius Testnet)
-- **RPC URL:** https://rpc.testnet.radiustech.xyz
-- **Fee Token:** SBC (0xF966020a30946A64B39E2e243049036367590858)
+| Section | Pages |
+|---------|-------|
+| Homepage | `index.mdx` |
+| Differentiators | `architected-for-scale.mdx`, `designed-for-internet-of-tomorrow.mdx`, `stablecoin-native-fees.mdx` |
+| Use Cases | `real-time-api-metering.mdx`, `pay-per-visit-content.mdx`, `streaming-payments.mdx` |
+| Developer Resources | `sdks-typescript.mdx`, `json-rpc-api.mdx`, `contract-addresses.mdx` |
+| Build & Deploy | `quick-start-first-payment.mdx`, `account-setup.mdx`, `wallet-integration.mdx`, `smart-contract-deploy.mdx` |
 
 ---
 
-## Development Philosophy & QA Standards
+## References
 
-This project maintains rigorous quality standards and follows framework best practices strictly.
-
-### Framework Best Practices First
-- Vocs official documentation is the source of truth
-- Always scan local clones of framework repos rather than web scraping
-- **Configuration-first approach:** Never use CSS hacks or workarounds (fix the config instead)
-- Strict adherence to file-based routing conventions
-
-### Multi-Model QA Escalation Pattern
-For critical issues, use escalating Claude tiers:
-1. **Haiku:** Broad coverage and quick analysis
-2. **Sonnet:** Deeper investigation and validation
-3. **Opus:** Critical production issues requiring highest accuracy
-
-All findings documented in `.claude/` directory with:
-- Task context
-- Escalation logs
-- QA reports from each tier
-- Applied fixes and verification
-
-**Example:** Vocs best practices audit discovered critical logo rendering bug that required 3-tier escalation to identify (Haiku and Sonnet both missed it).
-
-### Documentation-Driven Development
-- All major changes planned before execution
-- Implementation plans written in `.claude/` directory
-- Task context, escalation logs, and QA reports preserved for future reference
-- Known issues documented with root cause analysis and workarounds
-
-### Local Repository Scanning Policy
-- **NEVER web scrape** framework or reference documentation
-- Clone to `/tmp/` for accurate, version-specific information
-- Scan local code to understand implementation details
-- Cross-reference with official documentation
-
----
-
-## Content Organization
-
-### 14 Total Pages (3 sections)
-
-**Introduction (1 page)**
-- `index.mdx` - Homepage with network overview
-
-**Differentiators (3 pages)**
-- `differentiators/architected-for-scale.mdx` - Sharding and linear scalability
-- `differentiators/designed-for-internet-of-tomorrow.mdx` - EVM compatibility and differences from Ethereum
-- `differentiators/stablecoin-native-fees.mdx` - Turnstile mechanism (coming soon)
-
-**Use Cases (3 pages)**
-- `use-cases/real-time-api-metering.mdx` - Per-request billing patterns
-- `use-cases/pay-per-visit-content.mdx` - Micropayment models
-- `use-cases/streaming-payments.mdx` - Continuous payment flows
-
-**Developer Resources (3 pages)**
-- `developer-resources/sdks-typescript.mdx` - Radius SDK reference
-- `developer-resources/json-rpc-api.mdx` - RPC API methods
-- `developer-resources/contract-addresses.mdx` - Testnet contract addresses
-
-**Build & Deploy (4 pages)**
-- `build-deploy/quick-start-first-payment.mdx` - Zero-to-first-transaction guide
-- `build-deploy/account-setup.mdx` - Key generation and wallet setup
-- `build-deploy/wallet-integration.mdx` - MetaMask, ethers.js, viem integration
-- `build-deploy/smart-contract-deploy.mdx` - Foundry deployment guide
-
----
-
-## Recent Project Evolution
-
-Understanding the project's development history provides context for current patterns and decisions:
-
-### Phase 1: Vocs Best Practices Adoption (Jan 3, early)
-- Created comprehensive 7-phase restructuring plan
-- Moved content from `docs/` to `docs/pages/` (Vocs convention)
-- Created `docs/public/` for static assets
-- Added proper logos and favicon
-- Implemented custom footer component
-- Updated vocs.config.ts with best-practice settings
-
-### Phase 2: Comprehensive QA Audit (Jan 3, midday)
-- Multi-model escalation (Haiku → Sonnet → Opus)
-- Haiku found 6 issues (91% compliance)
-- Sonnet corrected false positives, refined severity
-- **Opus discovered CRITICAL logo rendering bug** (both previous tiers missed)
-  - Root cause: Config used `logo` instead of `logoUrl`
-  - Logos weren't rendering despite site building successfully
-  - Demonstrates value of escalation pattern for critical issues
-
-### Phase 3: CSS Error Investigation (Jan 3, afternoon)
-- Dev server showed vanilla-extract CSS cache warnings
-- Investigated root cause (race condition in CSS compilation)
-- Found upstream fix exists but not yet released
-- Implemented workaround: `vite.logLevel: 'warn'`
-- Documented issue with upgrade path
-
-### Phase 4: Hardhat Removal (Jan 3, evening)
-- Removed all Hardhat tooling references
-- Focused entirely on Foundry as primary tool
-- Updated all examples to show only Foundry
-- Simplified documentation for clarity
-
-### Phase 5: GitHub Pages Deployment (Jan 5)
-- Set up automated deployment via GitHub Actions
-- Configured Node v24 (required by Vocs v1.4.0)
-- Added Playwright to devDependencies for CI
-- Deployed to https://ryanrfox.github.io/dev-docs/
-
----
-
-## For Further Information
-
-- **Project README:** See `README.md` for detailed structure and contribution guidelines
-- **Implementation History:** See `.claude/Vocs_Implementation_Plan.md` for original restructuring plan
-- **QA Documentation:** See `.claude/vocs-best-practices-audit/` for audit findings and fixes
-- **Global Claude Instructions:** See `~/.claude/CLAUDE.md` for Claude Code working guidelines
+- **Style Guide:** `docs/RADIUS-STYLE-GUIDE.md` (authoritative)
+- **Vocs Docs:** https://vocs.dev
+- **Tempo (model):** https://docs.tempo.xyz/
+- **Global Claude Rules:** `~/.claude/CLAUDE.md`
