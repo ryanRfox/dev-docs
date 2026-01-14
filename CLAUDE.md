@@ -146,6 +146,45 @@ description: Clear, concise description for SEO and social sharing
 ---
 ```
 
+### Vocs Subtitle Pattern (CRITICAL)
+
+Vocs has a native subtitle syntax that places subtitle text INSIDE the `<header>` element. This prevents unwanted horizontal borders between H1 and H2 headings.
+
+**Syntax:**
+```mdx
+# Page Title [Subtitle text goes here]
+```
+
+**How it works:**
+- The `remarkSubheading` plugin (in Vocs source at `src/vite/plugins/remark/subheading.ts`) extracts bracketed text from H1 headings
+- Creates `<div role="doc-subtitle">` inside the `<header>` element
+- This keeps the subtitle as part of the header structure, avoiding the H2 border-top trigger
+
+**Why this matters:**
+- Vocs applies `border-top` to H2 elements via the selector `:not(header) + h2:not(:only-child)`
+- If a paragraph sits between H1 and H2, the H2 gets a border (two lines appear)
+- Using bracket syntax keeps everything in the header, so only one border appears (on H2)
+
+**Pattern to follow:**
+```mdx
+---
+title: Page Title
+description: Description for SEO
+---
+
+# Page Title [Brief subtitle or tagline describing the page purpose]
+
+## First Section
+
+Content...
+```
+
+**Pages that DON'T need the pattern:**
+- Pages where H1 is immediately followed by H2 (no subtitle paragraph)
+- Example: `# Real-time API Metering` → `## Problem Statement`
+
+**Reference:** Discovered by analyzing Tempo docs (`https://docs.tempo.xyz/`) which uses this pattern, confirmed by reading Vocs source code.
+
 ---
 
 ## Build & Development
