@@ -1,6 +1,11 @@
-# JSON-RPC API Reference
+---
+title: JSON-RPC API
+description: JSON-RPC 2.0 API reference for interacting with Radius Network
+---
 
-Radius exposes a JSON-RPC 2.0 API that is compatible with standard Ethereum tooling. All methods are available over HTTP and WebSocket connections.
+# JSON-RPC API [Compatible with Ethereum tooling, accessible over HTTP and WebSocket]
+
+Radius exposes a JSON-RPC 2.0 API compatible with standard Ethereum tooling and development libraries.
 
 ## Network Configuration
 
@@ -33,7 +38,7 @@ Standard Ethereum JSON-RPC methods for account queries, transactions, and state 
 
 ### eth_chainId
 
-Returns the chain ID of the network.
+Get the chain ID of the network.
 
 **Parameters:** None
 
@@ -54,7 +59,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### eth_blockNumber
 
-Returns the current block number.
+Get the current block number.
 
 **Parameters:** None
 
@@ -71,10 +76,10 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### eth_getBalance
 
-Returns the balance of an address.
+Get the balance of an address.
 
 :::info
-On Radius, fees are paid in stablecoins (SBC) rather than a native gas token. This method returns your actual native balance plus the maximum native token you could receive by converting your SBC through the turnstile. This supports wallets that check balance before allowing transactions.
+On Radius, fees are paid in stablecoins (SBC) rather than a native gas token. This method returns your actual native balance plus the maximum native token you could receive by converting your SBC through the Turnstile mechanism. This supports wallets that check balance before allowing transactions.
 :::
 
 **Parameters:**
@@ -96,7 +101,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### eth_getTransactionCount
 
-Returns the number of transactions sent from an address (the nonce).
+Get the transaction count (nonce) for an address.
 
 **Parameters:**
 | Name | Type | Description |
@@ -117,7 +122,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### eth_sendRawTransaction
 
-Submits a signed transaction to the network.
+Submit a signed transaction to the network.
 
 **Parameters:**
 | Name | Type | Description |
@@ -137,7 +142,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### eth_call
 
-Executes a call without creating a transaction (dry run).
+Execute a call without creating a transaction (dry run).
 
 **Parameters:**
 | Name | Type | Description |
@@ -176,7 +181,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### eth_estimateGas
 
-Estimates the gas required for a transaction.
+Estimate the gas required for a transaction.
 
 **Parameters:**
 | Name | Type | Description |
@@ -205,7 +210,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### eth_gasPrice
 
-Returns the current gas price.
+Get the current gas price.
 
 :::info
 On Radius, this returns `0x0` because fees are paid in stablecoins rather than via gas price bidding.
@@ -230,7 +235,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### eth_getCode
 
-Returns the bytecode at a given address.
+Get the bytecode at a given address.
 
 **Parameters:**
 | Name | Type | Description |
@@ -251,7 +256,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### eth_getStorageAt
 
-Returns the value of a storage slot at a given address.
+Get the value of a storage slot at a given address.
 
 **Parameters:**
 | Name | Type | Description |
@@ -273,7 +278,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### eth_getTransactionByHash
 
-Returns transaction details by hash.
+Get transaction details by hash.
 
 **Parameters:**
 | Name | Type | Description |
@@ -307,7 +312,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### eth_getTransactionReceipt
 
-Returns the receipt of a transaction.
+Get the receipt of a transaction.
 
 **Parameters:**
 | Name | Type | Description |
@@ -340,7 +345,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### eth_getLogs
 
-Returns logs matching a filter.
+Get logs matching a filter.
 
 **Parameters:**
 | Name | Type | Description |
@@ -377,7 +382,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### eth_getBlockByNumber
 
-Returns block information by block number.
+Get block information by block number.
 
 **Parameters:**
 | Name | Type | Description |
@@ -398,7 +403,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### eth_getBlockByHash
 
-Returns block information by block hash.
+Get block information by block hash.
 
 :::info
 This is pseudo-supported. Radius does not index blocks by hash in the traditional sense.
@@ -416,7 +421,7 @@ This is pseudo-supported. Radius does not index blocks by hash in the traditiona
 
 ### eth_accounts
 
-Returns the list of accounts managed by the node.
+Get the list of accounts managed by the node.
 
 :::info
 Radius does not manage accounts. This method always returns an empty array.
@@ -430,7 +435,7 @@ Radius does not manage accounts. This method always returns an empty array.
 
 ### eth_maxPriorityFeePerGas
 
-Returns the suggested priority fee.
+Get the suggested priority fee.
 
 :::info
 Returns `0x0` because Radius does not use priority fee bidding for transaction inclusion.
@@ -444,7 +449,7 @@ Returns `0x0` because Radius does not use priority fee bidding for transaction i
 
 ### eth_feeHistory
 
-Returns historical fee data.
+Get historical fee data.
 
 :::info
 Pseudo-supported. Radius uses stablecoin fees rather than dynamic gas pricing.
@@ -458,37 +463,37 @@ Pseudo-supported. Radius uses stablecoin fees rather than dynamic gas pricing.
 
 ### eth_mining
 
-Returns whether the node is actively mining.
+Get whether the node is actively mining.
 
 **Parameters:** None
 
-**Returns:** `boolean` - Always returns `true` (agents are always accepting transactions)
+**Returns:** `boolean` - Always `true` (agents are always accepting transactions)
 
 ---
 
 ### eth_syncing
 
-Returns the sync status.
+Get the sync status.
 
 **Parameters:** None
 
-**Returns:** `boolean` - Always returns `false` (no syncing in Radius architecture)
+**Returns:** `boolean` - Always `false` (no syncing in Radius architecture)
 
 ---
 
 ### eth_hashrate
 
-Returns the current hashrate.
+Get the current hashrate.
 
 **Parameters:** None
 
-**Returns:** `string` - Always returns `0x0` (Radius does not use proof-of-work)
+**Returns:** `string` - Always `0x0` (Radius does not use proof-of-work)
 
 ---
 
 ### eth_createAccessList
 
-Creates an access list for a transaction.
+Create an access list for a transaction.
 
 **Parameters:**
 | Name | Type | Description |
@@ -502,7 +507,7 @@ Creates an access list for a transaction.
 
 ### eth_subscribe
 
-Creates a subscription for real-time log events (WebSocket only).
+Create a subscription for real-time log events (WebSocket only).
 
 **Parameters:**
 | Name | Type | Description |
@@ -516,7 +521,7 @@ Creates a subscription for real-time log events (WebSocket only).
 
 ### eth_uninstallFilter
 
-Uninstalls a filter.
+Uninstall a filter.
 
 :::info
 Radius does not persist filters. This method always returns `true`.
@@ -537,7 +542,7 @@ Web3 utility methods.
 
 ### web3_clientVersion
 
-Returns the client version string.
+Get the client version string.
 
 **Parameters:** None
 
@@ -558,7 +563,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### web3_sha3
 
-Returns the Keccak-256 hash of the given data.
+Get the Keccak-256 hash of the given data.
 
 **Parameters:**
 | Name | Type | Description |
@@ -582,7 +587,7 @@ Network information methods.
 
 ### net_version
 
-Returns the network ID.
+Get the network ID.
 
 **Parameters:** None
 
@@ -603,7 +608,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### net_listening
 
-Returns whether the node is listening for peers.
+Get whether the node is listening for peers.
 
 **Parameters:** None
 
@@ -613,7 +618,7 @@ Returns whether the node is listening for peers.
 
 ### net_peerCount
 
-Returns the number of connected peers.
+Get the number of connected peers.
 
 **Parameters:** None
 
@@ -627,7 +632,7 @@ Radius Dashboard methods for monitoring and analytics.
 
 ### dash_globalGasUsage
 
-Returns the total gas usage across the system.
+Get the total gas usage across the system.
 
 **Parameters:** None
 
@@ -644,7 +649,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### dash_globalTps
 
-Returns the current transactions per second across the system.
+Get the current transactions per second across the system.
 
 **Parameters:** None
 
@@ -665,7 +670,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### dash_latestTransactions
 
-Returns the most recent transactions.
+Get the most recent transactions.
 
 **Parameters:**
 | Name | Type | Description |
@@ -695,7 +700,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 
 ### dash_findTransactionsByAddress
 
-Returns transactions involving a specific address.
+Get transactions involving a specific address.
 
 **Parameters:**
 | Name | Type | Description |
@@ -719,7 +724,7 @@ Radius-specific debugging and utility methods.
 
 ### rad_decodeKey
 
-Monitors the broker for key operations and returns the matching raw key for a given hashed key.
+Decode a hashed key by monitoring broker operations and returning the matching raw key.
 
 **Parameters:**
 | Name | Type | Description |
@@ -743,7 +748,7 @@ Transaction tracing methods (Parity-compatible).
 
 ### trace_call
 
-Executes a call and returns detailed trace information.
+Execute a call and retrieve detailed trace information.
 
 **Parameters:**
 | Name | Type | Description |

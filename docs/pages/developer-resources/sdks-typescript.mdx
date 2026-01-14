@@ -3,7 +3,7 @@ title: SDKs (TypeScript)
 description: Install and use the Radius TypeScript SDK for building on Radius
 ---
 
-# SDKs (TypeScript) [Complete toolkit for interacting with Radius, built on viem for Ethereum ecosystem compatibility.]
+# SDKs (TypeScript) [TypeScript SDK for building on Radius, built on viem]
 
 ## Installation
 
@@ -29,7 +29,7 @@ yarn add @radiustechsystems/sdk
 - Node.js >= 18
 - TypeScript 5+ (recommended)
 
-The SDK has no ethers.js or web3.js dependencies—it's built entirely on viem.
+The SDK depends on viem only (no ethers.js or web3.js).
 
 ## Quick Start
 
@@ -77,7 +77,7 @@ The SDK exports these primary constructs:
 
 ### RadiusClient
 
-The client is your entry point for all network interactions.
+Use the client to interact with the network.
 
 ```typescript
 import { createRadiusClient, radiusTestnet } from '@radiustechsystems/sdk';
@@ -85,7 +85,7 @@ import { createRadiusClient, radiusTestnet } from '@radiustechsystems/sdk';
 const client = createRadiusClient({ chain: radiusTestnet });
 ```
 
-**Environment Variable Support:** The client automatically reads `RADIUS_RPC_URL` or `RADIUS_ENDPOINT` environment variables as fallback endpoints.
+**Environment Variable Support:** The client reads `RADIUS_RPC_URL` or `RADIUS_ENDPOINT` environment variables as fallback endpoints.
 
 ### Client Methods
 
@@ -272,9 +272,9 @@ const { address, receipt } = await client.deployContract(
 console.log('Deployed at:', address);
 ```
 
-## Error Handling
+## Error handling
 
-The SDK provides a rich error hierarchy for detailed error handling.
+The SDK exports error classes for handling different failure scenarios.
 
 ### Error Classes
 
