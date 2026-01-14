@@ -10,7 +10,7 @@ import { Callout } from 'vocs/components';
 
 ## Overview
 
-Radius Network enables you to pay gas fees directly in stablecoins (SBC) rather than requiring native tokens. This eliminates a major friction point for users: the need to acquire and manage multiple tokens. On Radius, if your wallet has enough stablecoins to cover gas costs, you can send transactions without holding native tokens.
+Radius Network enables you to pay gas fees directly in stablecoins (USD) rather than requiring native tokens. This eliminates a major friction point for users: the need to acquire and manage multiple tokens. On Radius, if your wallet has enough stablecoins to cover gas costs, you can send transactions without holding native tokens.
 
 This feature is called **Stablecoin-Native Fees**, and it works automatically—no special code, configuration, or wallet changes required.
 
@@ -19,7 +19,7 @@ This feature is called **Stablecoin-Native Fees**, and it works automatically—
 When you submit a transaction, Radius uses a transparent mechanism to bridge the gap between stablecoin and native token needs:
 
 1. **Automatic Detection**: Radius detects when a user lacks sufficient native tokens to pay gas
-2. **SBC Conversion**: If the user holds enough stablecoins (SBC), Radius converts just enough SBC to provide the necessary native tokens
+2. **USD Conversion**: If the user holds enough stablecoins (USD), Radius converts just enough USD to provide the necessary native tokens
 3. **Single Transaction**: The conversion happens seamlessly as part of the same transaction execution
 4. **No Extra Charges**: Users are not charged gas for the conversion process itself
 
@@ -43,8 +43,8 @@ Radius implements Stablecoin-Native Fees consistently across all relevant RPC me
 ### eth_sendRawTransaction
 When a user submits a signed transaction:
 - If they have enough native tokens, it executes normally
-- If they lack native tokens but have sufficient SBC, the conversion executes automatically
-- The transaction state is committed, including any SBC conversions
+- If they lack native tokens but have sufficient USD, the conversion executes automatically
+- The transaction state is committed, including any USD conversions
 - The user receives confirmation that their transaction succeeded
 
 ### eth_call and eth_estimateGas
@@ -66,10 +66,10 @@ Stablecoin-Native Fees have a transparent, minimal cost structure:
 
 | Metric | Value |
 |--------|-------|
-| **Cost per transaction** | 0.0001 SBC |
-| **Transactions per 1 SBC** | 10,000 |
-| **Cost per 1,000 txns** | 0.10 SBC |
-| **Minimum threshold** | 0.001 SBC |
+| **Cost per transaction** | 0.0001 USD |
+| **Transactions per 1 USD** | 10,000 |
+| **Cost per 1,000 txns** | 0.10 USD |
+| **Minimum threshold** | 0.001 USD |
 
 This pricing structure makes Stablecoin-Native Fees practical for all transaction volumes, from small payments to high-frequency trading.
 
@@ -83,7 +83,7 @@ Here's how Stablecoin-Native Fees work in practice:
 
 **User's Wallet State:**
 - Native tokens: 0
-- Stablecoins (SBC): $10
+- Stablecoins (USD): $10
 
 **User Action:**
 - Submits a transaction requiring gas
@@ -104,7 +104,7 @@ Here's how Stablecoin-Native Fees work in practice:
 Stablecoin-Native Fees activate automatically when both conditions are met:
 
 1. User's native token balance is insufficient to cover the transaction's gas cost
-2. User's SBC balance is sufficient to generate the required native tokens
+2. User's USD balance is sufficient to generate the required native tokens
 
 If either condition isn't met, the transaction fails with insufficient funds.
 
@@ -115,7 +115,7 @@ While Stablecoin-Native Fees work automatically, keep these in mind:
 - **User Education**: Let users know they can transact with stablecoins alone
 - **Gas Estimation**: Use `eth_estimateGas` as normal—it accounts for conversions automatically
 - **Balance Display**: Consider showing "total transaction capacity" to help users understand their full spending power
-- **Error Handling**: Handle insufficient SBC the same way you'd handle insufficient funds on any chain
+- **Error Handling**: Handle insufficient USD the same way you'd handle insufficient funds on any chain
 
 ## FAQ
 
@@ -128,7 +128,7 @@ No. Your contracts work unchanged. The conversion happens at the RPC level befor
 **Can I disable Stablecoin-Native Fees?**
 No, and you don't need to. It's a protocol feature that benefits all users without affecting contract behavior.
 
-**What if a user lacks sufficient SBC?**
+**What if a user lacks sufficient USD?**
 The transaction fails with insufficient funds, like any other chain.
 
 **Are there security implications?**
