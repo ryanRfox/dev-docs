@@ -17,7 +17,7 @@ description: Deploy Solidity smart contracts to Radius using standard Ethereum t
 |---------|-------|
 | **RPC URL** | `https://rpc.testnet.radiustech.xyz` |
 | **Chain ID** | `1223953` |
-| **Fee Token** | SBC (`0xF966020a30946A64B39E2e243049036367590858`) |
+| **Fee Token** | USD (`0xF966020a30946A64B39E2e243049036367590858`) |
 
 ## Deploy with Foundry
 
@@ -195,7 +195,7 @@ forge create src/Token.sol:Token \
 
 Radius uses stablecoin fees instead of native gas:
 
-- **Fee token**: SBC
+- **Fee token**: USD
 - **Gas price**: Returns `0x0` from RPC (fees calculated differently)
 - **Gas limit**: Set reasonable limits; transactions have a maximum cap
 
@@ -209,7 +209,7 @@ cast call 0xF966020a30946A64B39E2e243049036367590858 \
 ## Deployment checklist
 
 1. **Get testnet funds** from the [faucet](https://testnet.radiustech.xyz/testnet/faucet)
-2. **Verify SBC balance** for fee payment
+2. **Verify USD balance** for fee payment
 3. **Compile contracts** with Solidity 0.8.x
 4. **Test locally** using Foundry
 5. **Deploy** using the RPC endpoint
@@ -220,7 +220,7 @@ cast call 0xF966020a30946A64B39E2e243049036367590858 \
 
 ### Transaction fails immediately
 
-Check that your account has SBC tokens for fees:
+Check that your account has USD tokens for fees:
 
 ```bash
 cast call 0xF966020a30946A64B39E2e243049036367590858 \

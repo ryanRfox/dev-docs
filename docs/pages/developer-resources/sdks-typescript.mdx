@@ -386,10 +386,10 @@ import { radiusTestnet, RADIUS_TESTNET_CONTRACTS } from '@radiustechsystems/sdk'
 // Chain definition includes contracts
 console.log(radiusTestnet.id);         // 1223953
 console.log(radiusTestnet.name);       // 'Radius Testnet'
-console.log(radiusTestnet.contracts?.sbc?.address);
+console.log(radiusTestnet.contracts?.usd?.address);
 
 // Or use the constants directly
-console.log(RADIUS_TESTNET_CONTRACTS.sbc);
+console.log(RADIUS_TESTNET_CONTRACTS.usd);
 // '0xF966020a30946A64B39E2e243049036367590858'
 ```
 
@@ -399,8 +399,8 @@ console.log(RADIUS_TESTNET_CONTRACTS.sbc);
 |---------|-------|
 | **RPC Endpoint** | `https://rpc.testnet.radiustech.xyz` |
 | **Chain ID** | `1223953` |
-| **Native Token** | SBC |
-| **SBC Token Contract** | `0xF966020a30946A64B39E2e243049036367590858` |
+| **Native Token** | USD |
+| **USD Token Contract** | `0xF966020a30946A64B39E2e243049036367590858` |
 
 ## ERC-20 Token Operations
 
@@ -408,7 +408,7 @@ console.log(RADIUS_TESTNET_CONTRACTS.sbc);
 
 ```typescript
 const token = createContractInstance({
-  address: RADIUS_TESTNET_CONTRACTS.sbc as Address,
+  address: RADIUS_TESTNET_CONTRACTS.usd as Address,
   abi: ERC20_ABI,
 });
 

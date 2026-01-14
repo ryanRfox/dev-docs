@@ -22,11 +22,11 @@ This guide uses Radius Testnet. You'll get free test tokens to experiment with.
 
 ## Get Test Tokens
 
-Before sending a transaction, grab free test SBC tokens from the faucet.
+Before sending a transaction, grab free test USD tokens from the faucet.
 
 1. Visit the [Radius Testnet Faucet](https://testnet.radiustech.xyz/testnet/faucet)
 2. Connect your wallet or paste a testnet address
-3. Claim 10 SBC tokens (instant)
+3. Claim 10 USD tokens (instant)
 4. Wait ~30 seconds for confirmation
 
 <Callout type="warning">
@@ -86,7 +86,7 @@ If you get a connection error, verify the RPC endpoint is correct and check your
 
 ## Send Your First Transaction
 
-Now let's send SBC tokens. You'll need:
+Now let's send USD tokens. You'll need:
 - A **private key** (from your testnet wallet)
 - A **recipient address** (another testnet address)
 
@@ -134,7 +134,7 @@ console.log('Signer created:', signer.address);
 const balance = await client.getBalance(signer.address);
 console.log('Balance:', balance.toString(), 'wei');
 
-// Send 0.5 SBC to recipient
+// Send 0.5 USD to recipient
 const amount = parseEther('0.5');
 
 console.log('Sending transaction...');
@@ -197,7 +197,7 @@ Paste your transaction hash into the [Radius Dashboard](https://dashboard.radius
 **Radius Testnet:**
 - RPC Endpoint: `https://rpc.testnet.radiustech.xyz`
 - Chain ID: `1223953`
-- SBC Token: `0xF966020a30946A64B39E2e243049036367590858`
+- USD Token: `0xF966020a30946A64B39E2e243049036367590858`
 - Block Explorer: [Radius Dashboard](https://dashboard.radiustech.xyz/)
 - Faucet: [Testnet Faucet](https://testnet.radiustech.xyz/testnet/faucet)
 

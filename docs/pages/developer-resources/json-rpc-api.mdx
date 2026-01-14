@@ -79,7 +79,7 @@ curl -X POST https://rpc.testnet.radiustech.xyz \
 Get the balance of an address.
 
 :::info
-On Radius, fees are paid in stablecoins (SBC) rather than a native gas token. This method returns your actual native balance plus the maximum native token you could receive by converting your SBC through the Turnstile mechanism. This supports wallets that check balance before allowing transactions.
+On Radius, fees are paid in stablecoins (USD) rather than a native gas token. This method returns your actual native balance plus the maximum native token you could receive by converting your USD through the Turnstile mechanism. This supports wallets that check balance before allowing transactions.
 :::
 
 **Parameters:**
@@ -163,7 +163,7 @@ Transaction call object:
 
 **Example:**
 ```bash
-# Query SBC token name
+# Query USD token name
 curl -X POST https://rpc.testnet.radiustech.xyz \
   -H "Content-Type: application/json" \
   -d '{
@@ -800,7 +800,7 @@ Radius uses standard JSON-RPC 2.0 error codes:
 
 | Contract | Address |
 |----------|---------|
-| SBC (Fee Token) | `0xF966020a30946A64B39E2e243049036367590858` |
+| USD (Fee Token) | `0xF966020a30946A64B39E2e243049036367590858` |
 | EntryPoint v0.7 | `0x9b443e4bd122444852B52331f851a000164Cc83F` |
 | SimpleAccountFactory | `0x4DEbDe0Be05E51432D9afAf61D84F7F0fEA63495` |
 
@@ -808,5 +808,5 @@ Radius uses standard JSON-RPC 2.0 error codes:
 
 ## Resources
 
-- [Faucet](https://testnet.radiustech.xyz/testnet/faucet) - Get testnet SBC tokens
+- [Faucet](https://testnet.radiustech.xyz/testnet/faucet) - Get testnet USD tokens
 - [EVM Compatibility](/differentiators/designed-for-internet-of-tomorrow) - Differences from standard Ethereum
