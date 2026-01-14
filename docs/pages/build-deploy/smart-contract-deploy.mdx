@@ -23,21 +23,21 @@ description: Deploy Solidity smart contracts to Radius using standard Ethereum t
 
 Foundry is the recommended toolchain for Radius development.
 
-### Installation
+### Install Foundry
 
 ```bash
 curl -L https://foundry.paradigm.xyz | bash
 foundryup
 ```
 
-### Create a Project
+### Create a project
 
 ```bash
 forge init my-project
 cd my-project
 ```
 
-### Example Contract
+### Example contract
 
 ```solidity
 // src/Counter.sol
@@ -76,7 +76,7 @@ Deployed to: 0xContractAddress
 Transaction hash: 0x...
 ```
 
-### Deploy with Constructor Arguments
+### Deploy with constructor arguments
 
 ```bash
 forge create src/Token.sol:Token \
@@ -85,7 +85,7 @@ forge create src/Token.sol:Token \
   --constructor-args "My Token" "MTK" 18
 ```
 
-### Deploy Using Scripts
+### Deploy using scripts
 
 ```solidity
 // script/Deploy.s.sol
@@ -111,7 +111,7 @@ forge script script/Deploy.s.sol \
   --broadcast
 ```
 
-## Verify Deployment
+## Verify deployment
 
 After deployment, verify your contract is accessible:
 
@@ -123,9 +123,9 @@ cast code 0xYourContractAddress --rpc-url https://rpc.testnet.radiustech.xyz
 cast call 0xYourContractAddress "count()" --rpc-url https://rpc.testnet.radiustech.xyz
 ```
 
-## Interact with Deployed Contracts
+## Interact with deployed contracts
 
-### Using cast (Foundry)
+### Use cast (Foundry)
 
 ```bash
 # Read state
@@ -138,7 +138,7 @@ cast send 0xContractAddress "increment()" \
   --private-key $PRIVATE_KEY
 ```
 
-### Using ethers.js
+### Use ethers.js
 
 ```javascript
 import { ethers } from "ethers";
@@ -160,7 +160,7 @@ const tx = await contract.increment();
 await tx.wait();
 ```
 
-## ERC-20 Token Deployment
+## Deploy an ERC-20 token
 
 Deploy a standard ERC-20 token:
 
@@ -191,7 +191,7 @@ forge create src/Token.sol:Token \
   --constructor-args "My Token" "MTK"
 ```
 
-## Gas and Fees
+## Gas and fees
 
 Radius uses stablecoin fees instead of native gas:
 
@@ -206,7 +206,7 @@ cast call 0xF966020a30946A64B39E2e243049036367590858 \
   --rpc-url https://rpc.testnet.radiustech.xyz
 ```
 
-## Deployment Checklist
+## Deployment checklist
 
 1. **Get testnet funds** from the [faucet](https://testnet.radiustech.xyz/testnet/faucet)
 2. **Verify SBC balance** for fee payment
@@ -218,7 +218,7 @@ cast call 0xF966020a30946A64B39E2e243049036367590858 \
 
 ## Troubleshooting
 
-### Transaction Fails Immediately
+### Transaction fails immediately
 
 Check that your account has SBC tokens for fees:
 
@@ -228,7 +228,7 @@ cast call 0xF966020a30946A64B39E2e243049036367590858 \
   --rpc-url https://rpc.testnet.radiustech.xyz
 ```
 
-### Contract Not Found After Deploy
+### Contract not found after deploy
 
 Radius has immediate finality. If the transaction succeeded, the contract exists. Verify with:
 
@@ -236,7 +236,7 @@ Radius has immediate finality. If the transaction succeeded, the contract exists
 cast code 0xContractAddress --rpc-url https://rpc.testnet.radiustech.xyz
 ```
 
-### Gas Estimation Issues
+### Gas estimation issues
 
 If gas estimation fails, try setting an explicit gas limit:
 
@@ -247,7 +247,7 @@ forge create src/Contract.sol:Contract \
   --gas-limit 3000000
 ```
 
-## Further Reading
+## Further reading
 
 - [EVM Compatibility](/differentiators/designed-for-internet-of-tomorrow) - Differences from Ethereum
 - [JSON-RPC API](/developer-resources/json-rpc-api) - API reference

@@ -35,7 +35,7 @@ Testnet tokens have no real value. Use them freely to learn and test.
 
 ## Connect to Radius
 
-Create a new project and install the Radius SDK:
+Create a project and install the Radius SDK:
 
 ```bash
 mkdir radius-quickstart && cd radius-quickstart
@@ -51,7 +51,7 @@ Add `"type": "module"` to your `package.json` for ESM support:
 }
 ```
 
-Install the SDK, viem (for utilities), and TypeScript runner:
+Install the SDK, viem, and TypeScript runner:
 
 ```bash
 pnpm add @radiustechsystems/sdk viem tsx
@@ -79,7 +79,7 @@ npx tsx transaction.ts
 You should see: `Connected to Radius Testnet, chain ID: 1223953n`
 
 <Callout type="info">
-The `n` suffix indicates a JavaScript BigInt, which handles large numbers precisely.
+The `n` suffix indicates a JavaScript BigInt for precise handling of large numbers.
 </Callout>
 
 If you get a connection error, verify the RPC endpoint is correct and check your internet connection.

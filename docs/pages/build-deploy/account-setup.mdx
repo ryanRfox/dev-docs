@@ -5,11 +5,11 @@ description: Create and configure signers for development on Radius. Learn key g
 
 # Account Setup [Create and configure signers for Radius development. Generate wallets, import keys, manage credentials.]
 
-## Creating a Signer
+## Create a signer
 
-The Radius SDK uses signers to authorize transactions. A signer holds a private key and can sign transactions on behalf of an account.
+The Radius SDK uses signers to authorize transactions. A signer holds a private key and signs transactions on behalf of an account.
 
-### Generate a New Wallet
+### Generate a wallet
 
 Use viem to generate a random wallet, then import it into the Radius SDK:
 
@@ -26,7 +26,7 @@ console.log('Private Key:', privateKey);
 
 Save these values securely—you'll need them to create a signer in the SDK.
 
-### Key Generation and Address Derivation
+### Key generation and address derivation
 
 When you generate a wallet:
 
@@ -36,7 +36,7 @@ When you generate a wallet:
 
 The address is deterministic—the same private key always produces the same address.
 
-### Import Into Radius SDK
+### Import into Radius SDK
 
 ```typescript
 import {
@@ -62,11 +62,11 @@ const balance = await client.getBalance(signer.address);
 console.log('Balance:', balance);
 ```
 
-## Importing Existing Keys
+## Import existing keys
 
 Already have a private key? Import it directly.
 
-### From an Existing Wallet
+### From an existing wallet
 
 If you have an existing Ethereum wallet (MetaMask, Ledger, Trezor, etc.), export the private key and import it:
 
@@ -89,7 +89,7 @@ const signer = createPrivateKeySigner(
 console.log('Imported address:', signer.address);
 ```
 
-### From Environment Variables
+### From environment variables
 
 Never hardcode private keys. Always use environment variables:
 
@@ -119,11 +119,11 @@ export RADIUS_PRIVATE_KEY=0x...
 npx tsx your-script.ts
 ```
 
-## Development vs. Production
+## Development and production separation
 
 Keep your keys separate across environments. Use different signers for development and production.
 
-### Development Setup
+### Development setup
 
 For local development and testnet, use test accounts:
 
@@ -146,7 +146,7 @@ const signer = createPrivateKeySigner(
 );
 ```
 
-### Production Setup
+### Production setup
 
 For production, use a separate key and environment:
 
@@ -159,7 +159,7 @@ Key differences:
 - Different private key (never reuse test keys in production)
 - Securely managed key storage (environment variables, secrets manager, or hardware wallet)
 
-## Key Management Best Practices
+## Key management best practices
 
 ### Do
 
@@ -180,7 +180,7 @@ Key differences:
 - **Store in plain text** - Use secure vaults or hardware wallets
 - **Reuse test keys in production** - Always generate new keys for production
 
-### Secure Storage Example
+### Secure storage example
 
 ```typescript
 // Bad - Don't do this
@@ -196,11 +196,11 @@ const privateKey = process.env.RADIUS_PRIVATE_KEY as `0x${string}`;
 const privateKey = await secretsManager.getSecret('radius-production-key');
 ```
 
-## Test Accounts
+## Test accounts
 
 Anvil provides well-known test accounts with predictable private keys. **Account 0 is funded on Radius testnet.**
 
-### Account 0 (Funded on Testnet)
+### Account 0 (funded on testnet)
 
 ```
 Address:    0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
@@ -235,7 +235,7 @@ Private Key: 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
 
 These accounts are derived from Anvil's mnemonic and are well-known for testing. They should only be used in development and testnet environments.
 
-### Funding Your Account
+### Fund your account
 
 If you're using a different account, get testnet tokens from the faucet:
 
@@ -250,7 +250,7 @@ const balance = await client.getBalance(signer.address);
 console.log('New balance:', balance);
 ```
 
-## Verify Account Setup
+## Verify account setup
 
 Once you've created or imported a signer, verify it's working:
 
@@ -287,7 +287,7 @@ async function verifyAccount(privateKey: `0x${string}`) {
 verifyAccount(process.env.RADIUS_PRIVATE_KEY as `0x${string}`);
 ```
 
-## Signer Interface
+## Signer interface
 
 The signer provides methods for signing transactions and messages:
 
@@ -300,7 +300,7 @@ interface RadiusSigner {
 }
 ```
 
-## Next Steps
+## Next steps
 
 Now that your signer is set up:
 

@@ -5,7 +5,7 @@ description: Connect your web app to Radius Network using MetaMask, wagmi, viem,
 
 # Wallet Integration [Connect your web app to Radius using MetaMask, wagmi, viem, and EIP-1193 compatible wallets.]
 
-## Supported Wallets
+## Supported wallets
 
 Radius Network works with all major Ethereum-compatible wallets:
 
@@ -18,11 +18,11 @@ Radius Network works with all major Ethereum-compatible wallets:
 
 All wallets communicate through the EIP-1193 standard, so the same integration code works across different wallet implementations.
 
-## Adding Radius Network
+## Add Radius Network
 
 Before users can transact, they need the Radius Network configured in their wallet. You can add it programmatically using the `wallet_addEthereumChain` RPC method.
 
-### Network Configuration
+### Network configuration
 
 Use this configuration object for Radius Testnet:
 
@@ -40,7 +40,7 @@ const radiusTestnet = {
 };
 ```
 
-### Adding the Network to MetaMask
+### Add the network to MetaMask
 
 Prompt users to add Radius Network to their wallet:
 
@@ -69,17 +69,17 @@ async function addRadiusNetwork() {
 
 Call this function on page load or from an "Add Network" button. If the network already exists, the wallet will switch to it.
 
-## Using wagmi (Recommended for React)
+## Use wagmi (recommended for React)
 
-[wagmi](https://wagmi.sh) is the recommended way to integrate wallets in React applications. The Radius SDK exports a wagmi-compatible chain definition.
+[wagmi](https://wagmi.sh) provides the recommended approach for wallet integration in React applications. The Radius SDK exports a wagmi-compatible chain definition.
 
-### Setup
+### Set up
 
 ```bash
 pnpm add wagmi viem @tanstack/react-query @radiustechsystems/sdk
 ```
 
-### Configure wagmi
+### Configure wagmi for Radius
 
 ```typescript
 import { WagmiProvider, createConfig, http } from 'wagmi';
@@ -108,7 +108,7 @@ export function App({ children }) {
 }
 ```
 
-### Connect Wallet
+### Connect wallet with wagmi
 
 ```typescript
 import { useConnect, useAccount, useDisconnect } from 'wagmi';
@@ -143,7 +143,7 @@ function ConnectButton() {
 }
 ```
 
-### Send Transaction with wagmi
+### Send a transaction with wagmi
 
 ```typescript
 import { useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
@@ -174,11 +174,11 @@ function SendTransaction() {
 }
 ```
 
-## Using viem Directly
+## Use viem directly
 
 For non-React applications or when you need more control, use viem directly.
 
-### Connect Wallet
+### Connect wallet
 
 ```typescript
 import { createWalletClient, createPublicClient, custom, http } from 'viem';
@@ -209,7 +209,7 @@ async function connectWallet() {
 }
 ```
 
-### Send Transaction with viem
+### Send a transaction with viem
 
 ```typescript
 import { parseEther } from 'viem';
@@ -242,7 +242,7 @@ async function sendTransaction(walletClient, publicClient, address, to, amount) 
 }
 ```
 
-## Using ethers.js
+## Use ethers.js
 
 ethers.js v6 also works with Radius:
 
@@ -280,24 +280,24 @@ async function sendWithEthers(signer, to, amount) {
 }
 ```
 
-## Transaction Details
+## Transaction details
 
-### Radius Transaction Characteristics
+### Radius transaction characteristics
 
 - **Stablecoin fees** - Gas is paid in stablecoins via the Turnstile mechanism
 - **Immediate finality** - Transactions are finalized in the next block
 - **Standard gas estimation** - Wallets estimate gas normally; Radius handles fee conversion
 
-### Connection Flow
+### Connection flow
 
 1. Check if `window.ethereum` exists (wallet is installed)
 2. Call `eth_requestAccounts` to prompt user for permission
 3. Retrieve the user's primary address
 4. Store the address for subsequent transactions
 
-## Error Handling
+## Handle errors
 
-Handle common wallet errors gracefully:
+Gracefully handle common wallet errors:
 
 ```typescript
 async function handleWalletError(error) {
@@ -330,7 +330,7 @@ async function handleWalletError(error) {
 }
 ```
 
-### Common Error Scenarios
+### Common error scenarios
 
 | Error Code | Cause | Solution |
 |------------|-------|----------|
@@ -340,7 +340,7 @@ async function handleWalletError(error) {
 | `Already pending` | Duplicate tx | Debounce submit button |
 | `Reverted` | Contract logic failed | Check contract conditions |
 
-## Best Practices
+## Best practices
 
 1. **Show loading states** - Disable UI while waiting for wallet response
 2. **Display transaction hash** - Let users view progress on the block explorer
@@ -348,7 +348,7 @@ async function handleWalletError(error) {
 4. **Validate addresses** - Ensure addresses are valid before sending
 5. **Debounce transactions** - Prevent accidental duplicate submissions
 
-## Complete React Example
+## Complete React example
 
 ```typescript
 import { useState } from 'react';
@@ -431,7 +431,7 @@ export default function WalletApp() {
 }
 ```
 
-## Next Steps
+## Next steps
 
 - **[Smart Contract Deployment](/build-deploy/smart-contract-deploy)** — Deploy Solidity contracts on Radius
 - **[SDK Reference](/developer-resources/sdks-typescript)** — Full SDK documentation
