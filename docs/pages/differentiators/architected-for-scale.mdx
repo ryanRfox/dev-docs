@@ -18,23 +18,29 @@ These aren't theoretical limits — they're demonstrated capabilities under load
 
 ## Linear Scalability
 
-Traditional blockchains hit throughput ceilings. Adding more nodes doesn't help because every node must process every transaction. Radius takes a different approach: sharded state with parallel execution.
+Traditional blockchains hit throughput ceilings. Adding more nodes doesn't help because every node must process every transaction in sequence. Radius takes a different approach: sharded state with parallel execution.
 
-### The Sharding Model
+### State Sharding Model
 
-Radius distributes state across multiple independent shard clusters:
+State are `key : value` pairs representing data elements used with Radius Network, including smart contract code, their "data", and account balance. Radius distributes distinct state elements across multiple independent shard clusters:
 
 <div style={{ display: 'flex', justifyContent: 'center', overflowX: 'auto', margin: '1.5rem 0' }}>
 
 ```mermaid
 flowchart TB
-    K["Keyspace: 000000 → ffffff"]
+    K["Radius Network Keyspace:<br/>0x00...00 → 0xff...ff"]
 
     K --> S0 & S1 & S2
 
-    S0["Shard 0<br/>000000-555554"]
-    S1["Shard 1<br/>555555-aaaaaa"]
-    S2["Shard 2<br/>aaaaab-ffffff"]
+    S0["Shard 0 Keyspace:<br/>0x00...00 → 0x55...54"]
+    S1["Shard 1 Keyspace:<br/>0x55...55 → 0xaa...aa"]
+    S2["Shard 2 Keyspace:<br/>0xaa...ab → 0xff...ff"]
+
+    S1 --> N1 & N11 & N12
+
+    N10["Node 1.0"]
+    N10["Node 1.1"]
+    N10["Node 1.2"]
 ```
 
 </div>
