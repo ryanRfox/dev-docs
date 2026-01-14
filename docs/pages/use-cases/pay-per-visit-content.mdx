@@ -22,7 +22,7 @@ Radius solves this with **pay-per-visit micropayments**—users pay exactly for 
 The user journey is frictionless:
 
 1. **User lands on premium content** and sees a paywall
-2. **Clicks "Unlock" and chooses a micropayment amount** ($0.05, $0.10, $0.25, etc.)
+2. **Clicks "Unlock" and chooses a micropayment amount** (0.05 USD, 0.10 USD, 0.25 USD, etc.)
 3. **Confirms payment in their wallet** (MetaMask, Rainbow, etc.)
 4. **Content unlocks instantly** after payment confirmation—no waiting, no email verification
 5. **Payment settles instantly** to your account in stablecoins
@@ -47,7 +47,7 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagm
 interface ContentPaywallProps {
   contentId: string;
   title: string;
-  amount: string; // e.g., "0.10" (SBC)
+  amount: string; // e.g., "0.10" (USD)
   children: React.ReactNode;
 }
 
@@ -355,7 +355,7 @@ Always test payments on Radius Testnet first. Use the faucet to get free test US
 2. **Make wallet connection obvious** — If not connected, guide users to connect before payment
 3. **Handle network errors gracefully** — Show retry buttons if payment fails
 4. **Store payment receipts** — Keep transaction hashes for support and analytics
-5. **Offer value for the price** — $0.10 articles should be substantial; avoid paywalling single paragraphs
+5. **Offer value for the price** — 0.10 USD articles should be substantial; avoid paywalling single paragraphs
 6. **Test on testnet first** — Always verify payment flow before production
 7. **Monitor gas costs** — Radius fees are low, but still track transaction costs
 
