@@ -11,7 +11,7 @@ export default defineConfig({
   topNav: [
     { text: 'Documentation', link: '/differentiators/architected-for-scale' },
     { text: 'Use Cases', link: '/use-cases/real-time-api-metering' },
-    { text: 'Developer Resources', link: '/developer-resources/sdks-typescript' },
+    { text: 'Developer Resources', link: '/developer-resources/network-configuration' },
     { text: 'Build & Deploy', link: '/build-deploy/quick-start-first-payment' },
   ],
   ogImageUrl: {
@@ -42,9 +42,10 @@ export default defineConfig({
       text: 'Developer Resources',
       collapsed: false,
       items: [
+        { text: 'Network Configuration', link: '/developer-resources/network-configuration' },
+        { text: 'Contract Addresses', link: '/developer-resources/contract-addresses' },
         { text: 'SDKs (TypeScript)', link: '/developer-resources/sdks-typescript' },
         { text: 'JSON-RPC API', link: '/developer-resources/json-rpc-api' },
-        { text: 'Contract Addresses', link: '/developer-resources/contract-addresses' },
       ],
     },
     {
