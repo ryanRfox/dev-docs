@@ -1,73 +1,31 @@
 ---
 title: Contract Addresses
-description: Deployed contract addresses and network configuration for Radius Testnet.
+description: Deployed contract addresses for Radius Testnet including core, ERC-4337, and utility contracts.
 ---
 
-# Contract Addresses [Addresses for core contracts on Radius Testnet]
-
-## Network Configuration
-
-Use these settings to connect to Radius Testnet:
-
-| Setting | Value |
-|---------|-------|
-| **Network Name** | Radius Testnet |
-| **RPC Endpoint** | `https://rpc.testnet.radiustech.xyz` |
-| **Chain ID** | `1223953` |
-| **Currency Symbol** | USD |
-| **Block Explorer** | `https://dashboard.radiustech.xyz/` |
-| **Faucet** | `https://testnet.radiustech.xyz/testnet/faucet` |
+# Contract Addresses [Deployed contracts on Radius Testnet]
 
 ## Core Contracts
 
-### USD Token
+### radUSD Token
 
 **Address:**
 ```
 0xF966020a30946A64B39E2e243049036367590858
 ```
 
-Stablecoin used for gas fees on Radius Testnet. Pay transaction fees through account abstraction or test fee mechanisms with this token.
-
-## ERC-4337 Contracts
-
-### EntryPoint v0.7
-
-**Address:**
-```
-0x9b443e4bd122444852B52331f851a000164Cc83F
-```
-
-ERC-4337 entry point contract for account abstraction. Submit user operations and manage bundlers through this contract on Radius Testnet.
-
-### SimpleAccountFactory
-
-**Address:**
-```
-0x4DEbDe0Be05E51432D9afAf61D84F7F0fEA63495
-```
-
-ERC-4337 simple account factory for deploying and managing smart contract wallets. Deploy deterministic smart contract accounts through this factory.
+Stablecoin used for gas fees on Radius Testnet.
 
 ## Utility Contracts
 
-### Permit2
+Standard Ethereum contracts deployed at their canonical addresses for developer convenience.
 
-**Address:**
-```
-0x000000000022d473030f116ddee9f6b43ac78ba3
-```
-
-Uniswap Permit2 contract for efficient token approvals and transfers. Enable gasless token approval mechanisms through signatures.
-
-### Create2 Factory
-
-**Address:**
-```
-0x4e59b44847b379578588920cA78FbF26c0B4956C
-```
-
-Arachnid deterministic deployment factory for creating contracts at predictable addresses. Use for cross-chain and upgrade patterns.
+| Contract | Address | Description |
+|----------|---------|-------------|
+| [Arachnid Create2 Factory](https://github.com/Arachnid/deterministic-deployment-proxy) | `0x4e59b44847b379578588920cA78FbF26c0B4956C` | Deploy contracts to deterministic addresses using CREATE2. Enables predictable addresses across chains and upgrade patterns. |
+| [CreateX](https://github.com/pcaversaccio/createx) | `0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed` | Advanced deployment factory supporting CREATE, CREATE2, and CREATE3. Includes cross-chain address prediction and salt mining utilities. |
+| [Multicall3](https://github.com/mds1/multicall) | `0xcA11bde05977b3631167028862bE2a173976CA11` | Aggregate multiple contract reads into a single RPC call. Reduces latency and enables atomic state snapshots for frontends and indexers. |
+| [Permit2](https://github.com/Uniswap/permit2) | `0x000000000022D473030F116dDEE9F6B43aC78BA3` | Unified token approval system from Uniswap. Enables gasless approvals via signatures and batched transfers across multiple tokens. |
 
 ---
 

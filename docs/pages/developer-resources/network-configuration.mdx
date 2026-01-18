@@ -1,0 +1,60 @@
+---
+title: Network Configuration
+description: Connection settings for Radius Testnet including RPC endpoint, chain ID, and faucet.
+---
+
+# Network Configuration [Connect to Radius Testnet]
+
+Use these settings to connect to Radius Testnet:
+
+| Setting | Value |
+|---------|-------|
+| **Network Name** | Radius Testnet |
+| **RPC Endpoint** | `https://rpc.testnet.radiustech.xyz` |
+| **Chain ID** | `1223953` |
+| **Currency Symbol** | USD |
+| **Block Explorer** | `https://dashboard.radiustech.xyz/` |
+| **Faucet** | `https://testnet.radiustech.xyz/testnet/faucet` |
+
+## Add to wallet
+
+### MetaMask
+
+1. Open MetaMask and select **Add Network**
+2. Enter the settings from the table above
+3. Save and switch to Radius Testnet
+
+### Programmatic (viem)
+
+```typescript
+import { defineChain } from 'viem'
+
+export const radiusTestnet = defineChain({
+  id: 1223953,
+  name: 'Radius Testnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'USD',
+    symbol: 'USD',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.testnet.radiustech.xyz'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Radius Explorer',
+      url: 'https://dashboard.radiustech.xyz',
+    },
+  },
+})
+```
+
+## Get testnet funds
+
+Visit the [Radius Faucet](https://testnet.radiustech.xyz/testnet/faucet) to receive testnet USD for development.
+
+---
+
+**Note:** Mainnet configuration will be added once Radius launches on mainnet.
